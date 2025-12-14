@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 using Microsoft.Extensions.Primitives;
+using MyFirstApp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +13,8 @@ app.MapGet("/cached", async context =>
     byte[] buffer = Encoding.UTF8.GetBytes(message);
     await context.Response.Body.WriteAsync(buffer);
 });
+
+app.UseMathUtility();
 
 app.Run(async context =>
 {
