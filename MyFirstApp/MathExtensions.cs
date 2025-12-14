@@ -6,7 +6,7 @@ public static class MathExtensions
 {
     public static void UseMathUtility(this IApplicationBuilder app)
     {
-        app.Run(async context =>
+        app.Use(async (context, next)=>
         {
             List<string> errors = [];
             double firstNumber = 0;
@@ -56,6 +56,7 @@ public static class MathExtensions
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
                 errors.ForEach(async error => await context.Response.WriteAsync(error + "\n"));
             }
+            await next(context);
         });
     }
 
