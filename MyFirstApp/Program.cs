@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Http.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
+using Microsoft.Extensions.Primitives;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,13 +15,13 @@ app.MapGet("/cached", async context =>
 
 app.Run(async context =>
 {
-    if (context.Request.Query.ContainsKey("hey"))
+    using StreamReader reader = new StreamReader(context.Request.Body);
+    string query = await reader.ReadToEndAsync();
+    Dictionary<string, StringValues> stringQueries = QueryHelpers.ParseQuery(query);
+    int counter = 1;
+    foreach (KeyValuePair<string, StringValues> keyValue in stringQueries)
     {
-        string? query = context.Request.Query["hey"];
-        if (query is not null)
-        {
-            await context.Response.WriteAsync(query);
-        }
+        await context.Response.WriteAsync($"query #{counter++} : {keyValue.Key} - {keyValue.Value}");
     }
 });
 
