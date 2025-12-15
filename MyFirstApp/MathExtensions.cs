@@ -6,7 +6,7 @@ public static class MathExtensions
 {
     public static void UseMathUtility(this IApplicationBuilder app)
     {
-        app.Use(async (context, next)=>
+        app.Use(async (context, next) =>
         {
             List<string> errors = [];
             double firstNumber = 0;
@@ -90,7 +90,7 @@ public static class MathExtensions
             _ => 0
         };
     }
-    private static double TryParseQueryString(IQueryCollection queries, string input) 
+    private static double TryParseQueryString(IQueryCollection queries, string input)
     {
         double.TryParse(queries[input][0], NumberFormatInfo.CurrentInfo, out double value);
         return value;
