@@ -1,11 +1,14 @@
 using AspRouting.CustomConstraints;
+using Microsoft.Extensions.FileProviders;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "CustomRoot" });
 builder.Services.AddRouting(options =>
 {
     options.ConstraintMap.Add("isadult", typeof(AdultConstraint));
 });
 var app = builder.Build();
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions() { FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "assets"))});
 
 app.Map("files/{fileName}.{extension}", async context =>
 {
@@ -43,9 +46,12 @@ app.Map("adults/{date:datetime:isadult}", async context =>
     await context.Response.WriteAsync("WOW YOURE'RE ADULT!");
 });
 
-app.MapGet("/", async context => 
+app.MapGet("rounds/{**path}", async context =>
 {
-    await context.Response.WriteAsync("Home Page");
+    foreach (KeyValuePair<string, object?> routes in context.Request.RouteValues)
+    {
+        await context.Response.WriteAsync($"{routes.Key} - {routes.Value}");
+    }
 });
 
 app.MapFallback(async context =>
