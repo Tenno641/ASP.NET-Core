@@ -1,5 +1,6 @@
 using AspRouting.CustomConstraints;
 using Microsoft.Extensions.FileProviders;
+using System.Collections.ObjectModel;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions() { WebRootPath = "CustomRoot" });
 builder.Services.AddRouting(options =>
@@ -8,7 +9,33 @@ builder.Services.AddRouting(options =>
 });
 var app = builder.Build();
 app.UseStaticFiles();
-app.UseStaticFiles(new StaticFileOptions() { FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "assets"))});
+app.UseStaticFiles(new StaticFileOptions() { FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "assets")) });
+
+app.MapGet("countries", async context =>
+{
+    ReadOnlyCollection<string> countries = ["United States", "Canada", "United Kingdom", "India", "Japan"];
+    await context.Response.WriteAsync(string.Join('\n', countries.Select((country, index) => $"{index + 1}, {country}")));
+});
+
+app.MapGet("countries/{id:int}", async context =>
+{
+    int id = Convert.ToInt32(context.Request.RouteValues["id"]);
+    ReadOnlyCollection<string> countries = ["United States", "Canada", "United Kingdom", "India", "Japan"];
+    if (id <= 0 || id > 100)
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        await context.Response.WriteAsync("The CountryID should be between 1 and 100");
+        return;
+
+    }
+    else if (id > countries.Count)
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        await context.Response.WriteAsync("[No Country]");
+        return;
+    }
+    await context.Response.WriteAsync($"{countries[id - 1]}");
+});
 
 app.Map("files/{fileName}.{extension}", async context =>
 {
