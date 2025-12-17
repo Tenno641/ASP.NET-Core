@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AspControllers.Controllers;
 
@@ -25,9 +27,23 @@ public class BankController : Controller
     [Route("get-current-balance/{accountNumber:int?}")]
     public IActionResult GetCurrentBalance()
     {
-        if (!Request.RouteValues.ContainsKey("accountNumber")) return NotFound("Account number should be supplided");
+        if (!Request.RouteValues.ContainsKey("accountNumber")) return NotFound("Account number should be supplied");
         int accountNumber = Convert.ToInt32(Request.RouteValues["accountNumber"]);
         if (accountNumber == 1001) return Ok(5000);
         else return BadRequest("Account number should be 1001");
     }
+    [Route("me")]
+    public IActionResult CurrentUser([FromForm] Model? model)
+    {
+        return Ok(new { RawData = HttpContext.Items["rawData"] });
+    }
+}
+public class Model
+{
+    [Required]
+    public required int Id { get; set; }
+    [Required]
+    public required string Name { get; set; }
+    [Required]
+    public required string Email { get; set; }
 }
