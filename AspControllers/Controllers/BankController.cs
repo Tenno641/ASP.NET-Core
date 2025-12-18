@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AspControllers.Models;
+using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Diagnostics;
 
 namespace AspControllers.Controllers;
 
@@ -35,7 +37,21 @@ public class BankController : Controller
     [Route("me")]
     public IActionResult CurrentUser([FromForm] Model? model)
     {
-        return Ok(new { RawData = HttpContext.Items["rawData"] });
+        return Ok(new { RawData = HttpContext.Items["rawData"] , Model = model});
+    }
+
+    [Route("profile")]
+    public IActionResult Person(Person person)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState
+                .Where(entry => entry.Value?.ValidationState == ModelValidationState.Invalid)
+                .Select(entry => new { Name = entry.Key, Errors = entry.Value?.Errors
+                .Select(error => error.ErrorMessage) }));
+        }
+
+        return Ok(person);
     }
 }
 public class Model
