@@ -1,11 +1,17 @@
-﻿var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+﻿using AspControllers.CustomBinders;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers(options => options.ModelBinderProviders.Insert(0, new PersonModelBindingProvider())).AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;   
+}).AddXmlSerializerFormatters();
+
 var app = builder.Build();
 
 app.UseStaticFiles();
 app.MapControllers();
 app.UseWhen(
-    context => context.Request.Path.StartsWithSegments("/me"),
+    context => context.Request.Path.StartsWithSegments("/profile"),
     app =>
     {
         app.Use(async (context, next) =>

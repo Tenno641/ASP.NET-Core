@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Diagnostics;
 
 namespace AspControllers.Controllers;
 
@@ -41,7 +40,7 @@ public class BankController : Controller
     }
 
     [Route("profile")]
-    public IActionResult Person(Person person)
+    public IActionResult Person(/*[ModelBinder(BinderType = typeof(PersonModelBinder))] */[FromHeader(Name = "User-Agent")] Person person)
     {
         if (!ModelState.IsValid)
         {
@@ -51,8 +50,9 @@ public class BankController : Controller
                 .Select(error => error.ErrorMessage) }));
         }
 
-        return Ok(person);
+        return Ok(new { Person = person, RawValue = HttpContext.Items["rawData"] });
     }
+
 }
 public class Model
 {

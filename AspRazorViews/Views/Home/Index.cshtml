@@ -1,0 +1,31 @@
+﻿@using AspRazorViews.Models;
+@{
+    string pageTitle = "Home Page";
+    IEnumerable<Person> persons = [
+        new(){Name = "Tiesto", Gender = Gender.Male, DateOfBirth = DateTime.Parse("1976-01-22")},
+        new() {Name = "Armin Van Buuren", Gender = Gender.Female, DateOfBirth = DateTime.Parse("1980-05-12")}
+    ];
+}
+@functions {
+
+}
+<html lang="en-us">
+<head>  
+    <title>@pageTitle</title>
+    <meta charset="utf-8" />
+</head>
+<body>
+    @Html.Raw("<h1>helloooo</h1>")
+    <h1>Good to see you, bish!</h1>
+    @foreach(Person person in persons)
+    {
+        <h2>Name: @person.Name</h2>
+        @if(person.DateOfBirth is not null)
+        {
+            <p>Age: @(DateTime.Now.Year - person.DateOfBirth.Value.Year)</p>
+        }
+        <p>Gender: @person.Gender</p>
+    }
+    <script></script>
+</body>
+</html>

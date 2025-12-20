@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspRouting", "AspRouting\As
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspControllers", "AspControllers\AspControllers.csproj", "{EEEF2CA3-9AE2-4B04-873F-C0D5FD0AA56B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspRazorViews", "AspRazorViews\AspRazorViews.csproj", "{DBF2C719-A3D0-439C-AD05-450F40A6BA75}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{EEEF2CA3-9AE2-4B04-873F-C0D5FD0AA56B}.Release|x64.Build.0 = Release|Any CPU
 		{EEEF2CA3-9AE2-4B04-873F-C0D5FD0AA56B}.Release|x86.ActiveCfg = Release|Any CPU
 		{EEEF2CA3-9AE2-4B04-873F-C0D5FD0AA56B}.Release|x86.Build.0 = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|x64.Build.0 = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Debug|x86.Build.0 = Debug|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|x64.ActiveCfg = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|x64.Build.0 = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|x86.ActiveCfg = Release|Any CPU
+		{DBF2C719-A3D0-439C-AD05-450F40A6BA75}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
