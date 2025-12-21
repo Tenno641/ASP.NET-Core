@@ -1,31 +1,45 @@
 ﻿@using AspRazorViews.Models;
 @{
-    string pageTitle = "Home Page";
-    IEnumerable<Person> persons = [
-        new(){Name = "Tiesto", Gender = Gender.Male, DateOfBirth = DateTime.Parse("1976-01-22")},
-        new() {Name = "Armin Van Buuren", Gender = Gender.Female, DateOfBirth = DateTime.Parse("1980-05-12")}
-    ];
-}
-@functions {
-
+    int? GetAge(DateTime? dateOfBirth)
+    {
+        if (dateOfBirth is not null)
+        {
+            double totalDays = (DateTime.Now - dateOfBirth).Value.TotalDays;
+            return (int)(totalDays / 365.25);
+        }
+        return null;
+    }
 }
 <html lang="en-us">
-<head>  
-    <title>@pageTitle</title>
+<head>
+    <title>@ViewData["appTitle"]</title>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/StyleSheet.css" />
 </head>
 <body>
-    @Html.Raw("<h1>helloooo</h1>")
-    <h1>Good to see you, bish!</h1>
-    @foreach(Person person in persons)
-    {
-        <h2>Name: @person.Name</h2>
-        @if(person.DateOfBirth is not null)
+    <div class="page-content direction-column">
+        <h1>Good to see you, bish!</h1>
+        @foreach (Person person in ViewBag.persons)
         {
-            <p>Age: @(DateTime.Now.Year - person.DateOfBirth.Value.Year)</p>
+            <div class="box float-left w-50">
+                <h3>Name: @person.Name</h3>
+                <table class="table w-100">
+                    <tr>
+                        <td>Age:</td>
+                        <td>@GetAge(person.DateOfBirth)</td>
+                    </tr>
+                    <tr>
+                        <td>Gender:</td>
+                        <td>@person.Gender</td>
+                    </tr>
+                </table>
+                <a href="/person-details/@person.Name">Details</a>
+            </div>
         }
-        <p>Gender: @person.Gender</p>
-    }
+        <div>
+            <a href="/person-products">Person Products</a>
+        </div>
+    </div>
     <script></script>
 </body>
 </html>

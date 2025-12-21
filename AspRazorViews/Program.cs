@@ -6,4 +6,6 @@ var app = builder.Build();
 app.UseStaticFiles();
 app.MapControllers();
 
+app.MapFallback(() => "Sorry wrong route");
+
 app.Run();

@@ -1,0 +1,46 @@
+﻿@model IEnumerable<CityWeather>
+@{
+    string WeatherBackgroundColor(int temperature)
+    {
+        switch (temperature)
+        {
+            case < 44:
+                return "blue-back";
+
+            case < 74:
+                return "green-back";
+
+            default:
+                return "red-back";
+        }
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/StyleSheet.css" />
+</head>
+<body>
+    <div class="page-content">
+        <h1>Weather</h1>
+        <div class="flex">
+            @foreach (CityWeather city in Model)
+            {
+                <div class="box flex w-50 @WeatherBackgroundColor(city.TemperatureFahrenheit)">
+                    <div>
+                        <p>@city.CityName</p>
+                        <p>@city.DateAndTime?.ToShortTimeString()</p>
+                        <a href="/weather/@city.CityUniqueCode">Details</a>
+                    </div>
+                    <div class="w-75 text-right">
+                        <h3>@city.TemperatureFahrenheit<sup>o</sup>F</h3>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <script></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+﻿@using AspRazorViews.Models;
+@model Person
+@{
+    int? GetAge(DateTime? dateOfBirth)
+    {
+        if (dateOfBirth is null) return null;
+        return (int)((DateTime.Now - dateOfBirth).Value.TotalDays) / 365;
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewBag.appTitle</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/StyleSheet.css" />
+</head>
+<body>
+    <div class="page-content">
+        <h3>@Model.Name</h3>
+        <div class="box">
+            <table class="table w-100">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Gender</th>
+                    </tr>
+                </thead>
+                <tr>
+                    <td>@Model.Name</td>
+                    <td>@GetAge(Model.DateOfBirth)</td>
+                    <td>@Model.Gender</td>
+                </tr>
+            </table>
+        </div>
+        <a href="/">Home</a>
+    </div>
+    <script></script>
+</body>
+</html>

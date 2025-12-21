@@ -1,0 +1,24 @@
+﻿@model CityWeather
+<!DOCTYPE html>
+<html>
+<head>
+    <title>City Weather</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/StyleSheet.css" />
+</head>
+<body>
+    <div class="flex">
+        <div class="box flex w-50">
+            <div>
+                <p>@Model.CityName</p>
+                <p>@Model.DateAndTime?.ToShortTimeString()</p>
+                <a href="/">Details</a>
+            </div>
+            <div class="w-75 text-right">
+                <h3>@Model.TemperatureFahrenheit<sup>o</sup>F</h3>
+            </div>
+        </div>
+    </div>
+    <script></script>
+</body>
+</html>
