@@ -1,0 +1,30 @@
+﻿<!DOCTYLE html>
+<html>
+<head>
+    <title>@ViewData["appTitle"]</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/StyleSheet.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <div class="navbar-brand">Demp App</div>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/about-company">About</a></li>
+                <li><a href="/contact-company">Contact</a></li>
+                <li><a href="/products">Products</a></li>
+                <li><a href="/search-products">Search</a></li>
+                <li><a href="/order-product">Order</a></li>
+            </ul>
+        </div>
+        <div class="page-content">
+            @RenderBody()
+        </div>
+        <div class="footer-content">
+            @RenderSection("footer_section", false)
+        </div>
+    </div>
+    <script></script>
+</body>
+</html>
