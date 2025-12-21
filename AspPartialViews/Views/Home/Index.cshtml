@@ -1,0 +1,13 @@
+﻿<h1>Home Page</h1>
+<div class="box">
+    <!-- HTML RENDERED HERE! -->
+</div>
+<button id="list-button" type="button" class="button button-blue-back">Load Programming Languages</button>
+<script>
+    const listButton = document.getElementById('list-button')
+    listButton.addEventListener('click', async () => {
+        const response= await fetch('programming-languages');
+        const text = await response.text();
+        document.querySelector('.box').innerHTML += text;
+    });
+</script>

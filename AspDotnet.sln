@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspRazorViews", "AspRazorVi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspRazorLayout", "AspRazorLayout\AspRazorLayout.csproj", "{1A936E5F-16EB-45B6-9D4E-65FC9EA5284F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspPartialViews", "AspPartialViews\AspPartialViews.csproj", "{8F83737D-641F-47E3-A953-4E2002C09C68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,18 @@ Global
 		{1A936E5F-16EB-45B6-9D4E-65FC9EA5284F}.Release|x64.Build.0 = Release|Any CPU
 		{1A936E5F-16EB-45B6-9D4E-65FC9EA5284F}.Release|x86.ActiveCfg = Release|Any CPU
 		{1A936E5F-16EB-45B6-9D4E-65FC9EA5284F}.Release|x86.Build.0 = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|x64.Build.0 = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Debug|x86.Build.0 = Debug|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|x64.ActiveCfg = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|x64.Build.0 = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|x86.ActiveCfg = Release|Any CPU
+		{8F83737D-641F-47E3-A953-4E2002C09C68}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
