@@ -13,6 +13,12 @@ public class HomeController : Controller
         return View();
     }
 
+    [Route("about")]
+    public IActionResult About()
+    {
+        return View();
+    }
+
     [Route("programming-languages")]    
     public IActionResult GetProgrammingLanguages()
     {

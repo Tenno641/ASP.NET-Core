@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.pageTitle = "Home";
+    PersonGrid model = new PersonGrid()
+    {
+        GridTitle = "Person",
+        Persons =
+        [
+            new Person() {Name = "Ibrahim", JoBTitle = "Captian"},
+            new Person() {Name = "Mostafa", JoBTitle = "Theif"},
+            new Person() {Name = "Hussien", JoBTitle = "Depressed" }
+        ]
+    };
+}
+
+<h1>Home Page</h1>
+<button id="load-people-button" type="button" class="button button-blue-back">Load People</button>
+<div class="people-section">
+    <!-- loaded people -->
+</div>
+@* @await Component.InvokeAsync("Grid", new { grid = model }) *@
+@* <vc:grid grid="model"></vc:grid> *@
+
+<script>
+    document.getElementById('load-people-button').addEventListener('click', async () => {
+        const response = await fetch('/load-people');
+        const htmlContext = await response.text();
+        document.querySelector('.people-section').innerHTML += htmlContext;
+    });
+</script>
