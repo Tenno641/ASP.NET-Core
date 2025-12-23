@@ -1,0 +1,22 @@
+﻿@model IEnumerable<string>
+@inject ICitiesService citiesService
+@{
+    ViewBag.pageTitle = "Home";
+}
+<div class="list-container">
+    <ul class="list">
+        @foreach (string city in citiesService.GetCities())
+        {
+            <li>@city</li>
+        }
+    </ul>
+    <div class="box">
+        <h3>Current Service Instance ID: @ViewBag.ServiceInstanceId</h3>
+    </div>
+    <div class="box">
+        <h3>Custom Service Instance ID: @ViewBag.CustomServiceInstanceId</h3>
+    </div>
+    <div class="box">
+        <h3>View Injected Service Instance ID: @citiesService.InstanceId</h3>
+    </div>
+</div>
