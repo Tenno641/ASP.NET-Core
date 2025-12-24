@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d6327a73-8555-4875-9459-e7cb0a9277a2</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\StyleSheet.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\StyleSheet.css" />
+  </ItemGroup>
+
+</Project>

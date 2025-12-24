@@ -1,0 +1,46 @@
+﻿@model StockQuote
+@{
+    ViewBag.pageTitle = "Home";
+}
+<h1>Stock</h1>
+<div class="box trading-panel">
+
+    <div class="flex trading-panel-flex">
+
+        <div id="stock-price-panel">
+
+            <div class="stock">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>Current:</td>
+                            <th><small>$</small> <span class="price">@Model.CurrentPrice.ToString("N")</span></th>
+                        </tr>
+
+                        <tr>
+                            <td>High:</td>
+                            <th><small>$</small> <span class="price">@Model.HighPriceOfDay.ToString("N")</span></th>
+                        </tr>
+
+                        <tr>
+                            <td>Low:</td>
+                            <th><small>$</small> <span class="price">@Model.LowPriceOfDay.ToString("N")</span></th>
+                        </tr>
+
+                        <tr>
+                            <td>Open:</td>
+                            <th><small>$</small> <span class="price">@Model.OpenPriceOfDay.ToString("N")</span></th>
+                        </tr>
+
+                        <tr>
+                            <td>Previous Close:</td>
+                            <th><small>$</small> <span class="price">@Model.PreviousClosePrice.ToString("N")</span></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
