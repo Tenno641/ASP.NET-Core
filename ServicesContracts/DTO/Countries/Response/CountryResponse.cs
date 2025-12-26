@@ -1,6 +1,6 @@
 ﻿using Entities;
-
-public class CountryResponse 
+namespace ServicesContracts.DTO.Countries.Response;
+public class CountryResponse
 {
     public Guid Id { get; init; }
     public string? Name { get; init; }
@@ -14,7 +14,7 @@ public class CountryResponse
 
         if (countryResponse.Name is null) return false;
 
-        return countryResponse.Name.Equals(Name) && countryResponse.Id.Equals(Id); 
+        return countryResponse.Name.Equals(Name) && countryResponse.Id.Equals(Id);
     }
 
     public override int GetHashCode()

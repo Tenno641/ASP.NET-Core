@@ -1,0 +1,77 @@
+﻿@model IEnumerable<PersonResponse>
+@{
+    ViewBag.pageTitle = "Home";
+    SortOrderOptions ChangeSortOrder(SortOrderOptions sortOrder)
+    {
+        return sortOrder switch
+        {
+            SortOrderOptions.Ascending => SortOrderOptions.Descending,
+            SortOrderOptions.Descending => SortOrderOptions.Ascending,
+            _ => SortOrderOptions.Ascending
+        };
+    }
+    string Url(string currentSort)
+    {
+        return $"/persons/index?searchBy={ViewBag.CurrentSearchBy}&searchString={ViewBag.CurrentSearchString}&sortBy={currentSort}&sortOrder={ChangeSortOrder(ViewBag.CurrentSortOrder)}";
+    }
+}
+
+<form action="~/persons/index" method="get">
+    <div class="box flex">
+        <div class="flex-1">
+            <select class="form-input" name="searchBy">
+                @foreach (KeyValuePair<string, string> option in ViewBag.SearchOptions)
+                {
+                    @if (ViewBag.CurrentSearchBy == option.Key)
+                    {
+                        <option value="@option.Key" selected="selected">@option.Value</option>
+                    }
+                    else
+                    {
+                        <option value="@option.Key">@option.Value</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="flex-1">
+            <input type="search" class="form-input" name="searchString" placeholder="Search..." value="@ViewBag.CurrentSearchString" />
+        </div>
+
+        <div class="flex-1">
+            <button type="submit" class="button button-blue-back">Search</button>
+            <a href="/" class="link-hover">Reset All</a>
+        </div>
+    </div>
+</form>
+
+<h1>Persons</h1>
+<table class="table w-100 mt">
+    <thead>
+        <tr>
+            <th><a href="@Url("Name")">Person Name</a><i class="fa-solid fa-arrow-down-long"></i></th>
+            <th><a href="@Url("Email")">Email</a></th>
+            <th><a href="@Url("DateOfBirth")">Date Of Birth</a></th>
+            <th><a href="@Url("Age")">Age</a></th>
+            <th><a href="@Url("Gender")">Gender</a></th>
+            <th><a href="@Url("Country")">Country</a></th>
+            <th><a href="@Url("Address")">Address</a></th>
+            <th><a href="@Url("ReceiveNewsLetters")">Receive News Letters</a></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (PersonResponse person in Model)
+        {
+            <tr>
+                <td>@person.Name</td>
+                <td>@person.Email</td>
+                <td>@person.DateOfBirth?.ToShortDateString()</td>
+                <td>@person.Age</td>
+                <td>@person.Gender</td>
+                <td>@person.CountryName</td>
+                <td>@person.Address</td>
+                <td>@person.ReceiveNewsLetter</td>
+            </tr>
+        }
+    </tbody>
+</table>

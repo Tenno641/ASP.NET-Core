@@ -2,7 +2,10 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace ServicesContracts.DTO.Persons.Request;
-public record struct PersonRequest(
+
+public record struct PersonUpdateRequest(
+    [property: Required]
+    Guid Id,
     [property: Required]
     string? Name,
     [property: Required]
@@ -13,12 +16,13 @@ public record struct PersonRequest(
     Guid? CountryId,
     string? Address,
     bool ReceiveNewsLetter
-)
+    )
 {
     public Person ToPerson()
     {
         return new Person()
         {
+            Id = Id,
             Name = Name,
             Email = Email,
             DateOfBirth = DateOfBirth,
@@ -28,4 +32,4 @@ public record struct PersonRequest(
             ReceiveNewsLetter = ReceiveNewsLetter
         };
     }
-}
+};

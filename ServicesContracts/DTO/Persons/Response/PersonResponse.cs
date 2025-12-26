@@ -1,4 +1,5 @@
 ﻿using Entities;
+using ServicesContracts.DTO.Persons.Request;
 
 namespace ServicesContracts.DTO.Persons.Response;
 public record struct PersonResponse
@@ -17,8 +18,7 @@ public record struct PersonResponse
 
 public static class PersonResponseExtension
 {
-    public static PersonResponse ToPersonResponse(this Person person)
-    {
+    public static PersonResponse ToPersonResponse(this Person person) {
         return new PersonResponse()
         {
             Id = person.Id,
@@ -32,6 +32,22 @@ public static class PersonResponseExtension
             Age = CalculateAge(person.DateOfBirth)
         };
     }
+
+    public static PersonUpdateRequest ToPersonUpdateRequest(this PersonResponse personResponse)
+    {
+        return new PersonUpdateRequest()
+        {
+            Id = personResponse.Id,
+            Address = personResponse.Address,
+            CountryId = personResponse.CountryId,
+            DateOfBirth = personResponse.DateOfBirth,
+            Email = personResponse.Email,
+            Gender = Enum.TryParse<GenderOptions>(personResponse.Gender, true, out GenderOptions value) ? value : null,
+            Name = personResponse.Gender,
+            ReceiveNewsLetter = personResponse.ReceiveNewsLetter
+        };
+    }
+
     private static int? CalculateAge(DateTime? dateTime)
     {
         return (int?)(DateTime.Now - dateTime)?.TotalDays / 365;

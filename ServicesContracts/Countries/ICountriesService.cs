@@ -1,4 +1,7 @@
-﻿namespace ServicesContracts.Countries;
+﻿using ServicesContracts.DTO.Countries.Request;
+using ServicesContracts.DTO.Countries.Response;
+
+namespace ServicesContracts.Countries;
 
 public interface ICountriesService
 {

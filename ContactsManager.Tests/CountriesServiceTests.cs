@@ -8,7 +8,7 @@ public class CountriesServiceTests
     private readonly ICountriesService _service;
     public CountriesServiceTests()
     {
-        _service = new CountriesService();
+        _service = new CountriesService(false);
     }
 
     #region AddCountryTests
