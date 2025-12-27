@@ -8,7 +8,7 @@ public interface IPersonsService
     PersonResponse AddPerson(PersonRequest? personRequest);
     PersonResponse? Get(Guid? id);
     IEnumerable<PersonResponse> GetAll();
-    IEnumerable<PersonResponse> Filter(string searchBy, string? searchString);
+    IEnumerable<PersonResponse> Filter(IEnumerable<PersonResponse> data, string searchBy, string? searchString);
     IEnumerable<PersonResponse> Order(IEnumerable<PersonResponse> data, string sortBy, SortOrderOptions sortOptions);
     PersonResponse Update(PersonUpdateRequest? personUpdateRequest);
     bool Delete(Guid? id);

@@ -10,12 +10,11 @@ using System.ComponentModel.DataAnnotations;
 namespace Services.Persons;
 public class PersonsService : IPersonsService
 {
-    private readonly List<Person> _persons;
+    private readonly List<Person> _persons = [];
     private readonly ICountriesService _countriesService;
     public PersonsService(ICountriesService countriesService, bool initialize = true)
     {
-        _persons = new List<Person>
-{
+        _persons.AddRange(
     new() { Id = Guid.NewGuid(), Name = "Ahmed Ali", Email = "ahmed@example.com", DateOfBirth = new DateTime(1990, 5, 12), Gender = "Male", CountryId = Guid.Parse("11111111-1111-1111-1111-111111111111"), Address = "Cairo, Egypt", ReceiveNewsLetter = true },
     new() { Id = Guid.NewGuid(), Name = "Sara Hassan", Email = "sara@example.com", DateOfBirth = new DateTime(1992, 8, 20), Gender = "Female", CountryId = Guid.Parse("11111111-1111-1111-1111-111111111111"), Address = "Alexandria, Egypt", ReceiveNewsLetter = false },
     new() { Id = Guid.NewGuid(), Name = "John Smith", Email = "john@example.com", DateOfBirth = new DateTime(1985, 3, 15), Gender = "Male", CountryId = Guid.Parse("22222222-2222-2222-2222-222222222222"), Address = "New York, USA", ReceiveNewsLetter = true },
@@ -35,8 +34,7 @@ public class PersonsService : IPersonsService
     new() { Id = Guid.NewGuid(), Name = "Omar Saleh", Email = "omar@example.com", DateOfBirth = new DateTime(1991, 6, 30), Gender = "Male", CountryId = Guid.Parse("12121212-1212-1212-1212-121212121212"), Address = "Riyadh, Saudi Arabia", ReceiveNewsLetter = false },
     new() { Id = Guid.NewGuid(), Name = "Fatima Noor", Email = "fatima@example.com", DateOfBirth = new DateTime(1990, 9, 17), Gender = "Female", CountryId = Guid.Parse("12121212-1212-1212-1212-121212121212"), Address = "Jeddah, Saudi Arabia", ReceiveNewsLetter = true },
     new() { Id = Guid.NewGuid(), Name = "Youssef Amr", Email = "youssef@example.com", DateOfBirth = new DateTime(1988, 12, 2), Gender = "Male", CountryId = Guid.Parse("90909090-9090-9090-9090-909090909090"), Address = "Athens, Greece", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Amina Zayed", Email = "amina@example.com", DateOfBirth = new DateTime(1992, 7, 11), Gender = "Female", CountryId = Guid.Parse("90909090-9090-9090-9090-909090909090"), Address = "Thessaloniki, Greece", ReceiveNewsLetter = false }
-};
+    new() { Id = Guid.NewGuid(), Name = "Amina Zayed", Email = "amina@example.com", DateOfBirth = new DateTime(1992, 7, 11), Gender = "Female", CountryId = Guid.Parse("90909090-9090-9090-9090-909090909090"), Address = "Thessaloniki, Greece", ReceiveNewsLetter = false });
         _countriesService = countriesService;
     }
     public PersonResponse AddPerson(PersonRequest? personRequest)
@@ -46,7 +44,7 @@ public class PersonsService : IPersonsService
 
         if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.validationResults.Select(result => result.ErrorMessage)));
 
-        Person person = personRequest.Value.ToPerson();
+        Person person = personRequest.ToPerson();
         person.Id = Guid.NewGuid();
 
         _persons.Add(person);
@@ -78,26 +76,26 @@ public class PersonsService : IPersonsService
         return _persons.Select(ConvertPersonToPersonResponse);
     }
 
-    private IEnumerable<PersonResponse> FilterGeneric<T>(Func<PersonResponse, T> selector, Func<T, bool> predicate)
+    private IEnumerable<PersonResponse> FilterGeneric<T>(IEnumerable<PersonResponse> data, Func<PersonResponse, T> selector, Func<T, bool> predicate)
     {
-        return GetAll().Where(person => predicate(selector(person)));
+        return data.Where(person => predicate(selector(person)));
     }
 
-    public IEnumerable<PersonResponse> Filter(string searchBy, string? searchString)
+    public IEnumerable<PersonResponse> Filter(IEnumerable<PersonResponse> data, string searchBy, string? searchString)
     {
-        if (searchString is null) return GetAll();
+        if (searchString is null) return data;
 
         return searchBy switch
         {
-            "Name" => FilterGeneric(person => person.Name, name => name?.Contains(searchString) ?? true),
-            "Email" => FilterGeneric(person => person.Email, email => email?.Contains(searchString) ?? true),
-            "DateOfBirth" => FilterGeneric(person => person.DateOfBirth, date => date?.ToString("dd mm yyy").Contains(searchString) ?? true),
-            "Age" => FilterGeneric(person => person.Age, age => age?.Equals(searchString) ?? true),
-            "Gender" => FilterGeneric(person => person.Gender, gender => gender?.Equals(searchString) ?? true),
-            "Country" => FilterGeneric(person => person.CountryName, country => country?.Equals(searchString) ?? true),
-            "Address" => FilterGeneric(person => person.Address, address => address?.Contains(searchString) ?? true),
-            "ReceiveNewsLetters" => FilterGeneric(person => person.ReceiveNewsLetter, receiveNews => receiveNews.Equals(searchString)),
-            _ => GetAll()
+            "Name" => FilterGeneric(data, person => person.Name, name => name?.Contains(searchString) ?? true),
+            "Email" => FilterGeneric(data, person => person.Email, email => email?.Contains(searchString) ?? true),
+            "DateOfBirth" => FilterGeneric(data, person => person.DateOfBirth, date => date?.ToString("dd mm yyy").Contains(searchString) ?? true),
+            "Age" => FilterGeneric(data, person => person.Age, age => age?.Equals(searchString) ?? true),
+            "Gender" => FilterGeneric(data, person => person.Gender, gender => gender?.Equals(searchString) ?? true),
+            "Country" => FilterGeneric(data, person => person.CountryName, country => country?.Equals(searchString) ?? true),
+            "Address" => FilterGeneric(data, person => person.Address, address => address?.Contains(searchString) ?? true),
+            "ReceiveNewsLetters" => FilterGeneric(data, person => person.ReceiveNewsLetter, receiveNews => receiveNews.Equals(searchString)),
+            _ => data
         };
     }
 
@@ -135,11 +133,11 @@ public class PersonsService : IPersonsService
 
         if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.errors.Select(error => error.ErrorMessage)));
 
-        Person? person = _persons.Find(person => person.Id == personUpdateRequest.Value.Id);
+        Person? person = _persons.Find(person => person.Id == personUpdateRequest.Id);
 
         if (person is null) throw new ArgumentException("Not Found Person");
 
-        UpdatePerson(personUpdateRequest.Value, person);
+        UpdatePerson(personUpdateRequest, person);
 
         return ConvertPersonToPersonResponse(person);
     }

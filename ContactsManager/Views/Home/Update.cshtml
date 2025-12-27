@@ -1,0 +1,94 @@
+﻿@model PersonUpdateRequest
+@{
+    ViewBag.pageTitle = "Update Person";
+}
+<a asp-controller="Home" asp-action="Index" class="link-hover">Go to persons list</a>
+<h1>Update Person</h1>
+<div class="center-box">
+    <form asp-controller="Home" asp-action="Update" asp-route-id="" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="Name">Name</label>
+            </div>
+            <div class="flex-1">
+                <input class="form-input" asp-for="Name" required />
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="Email">Email</label>
+            </div>
+            <div class="flex-1">
+                <input class="form-input" asp-for="Email" required />
+                <span asp-validation-for="Email" class="text-red"></span>
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="DateOfBirth">Date Of Birth</label>
+            </div>
+            <div class="flex-1">
+                <input class="form-input" asp-for="DateOfBirth" type="date" required />
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="Gender">Gender</label>
+            </div>
+            <div class="flex-1">
+                @{
+                    string[] genderOptions = Enum.GetNames(typeof(GenderOptions));
+                }
+                @foreach (string option in genderOptions)
+                {
+                    <label for="@option">@option</label>
+                    <input type="radio" asp-for="Gender" value="@option" required />
+                }
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="CountryId">Country</label>
+            </div>
+            <div class="flex-1 w-25">
+                <select class="form-input" asp-for="CountryId" asp-items="@ViewBag.Countries">
+                    <option value="">Please Select</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="Address">Address</label>
+            </div>
+            <div class="flex-1">
+                <textarea class="form-input" asp-for="Address" value="@Model.Address" required></textarea>
+                <span class="text-red" asp-validation-for="Address"></span>
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="w-25">
+                <label class="form-label" asp-for="ReceiveNewsLetter">Receive News Letters</label>
+            </div>
+            <div class="flex-1">
+                <input type="checkbox" asp-for="ReceiveNewsLetter" value="@Model.ReceiveNewsLetter" checked />
+            </div>
+        </div>
+        <div class="flex form-field">
+            <div class="flex-1">
+                <button class="button button-green-back" type="submit" id="ReceiveNewsLetters">Update Person</button>
+            </div>
+        </div>
+        @if (ViewBag.Errors is not null)
+        {
+            <div class="box text-red">
+                <ul class="ml">
+                    @foreach (string error in ViewBag.Errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            </div>
+        }
+    </form>
+</div>

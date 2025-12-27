@@ -43,7 +43,7 @@ public static class PersonResponseExtension
             DateOfBirth = personResponse.DateOfBirth,
             Email = personResponse.Email,
             Gender = Enum.TryParse<GenderOptions>(personResponse.Gender, true, out GenderOptions value) ? value : null,
-            Name = personResponse.Gender,
+            Name = personResponse.Name,
             ReceiveNewsLetter = personResponse.ReceiveNewsLetter
         };
     }

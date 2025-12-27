@@ -2,15 +2,20 @@
 using System.ComponentModel.DataAnnotations;
 
 namespace ServicesContracts.DTO.Persons.Request;
-public record struct PersonRequest(
-    [property: Required]
+public record PersonRequest(
+    [Required]
     string? Name,
-    [property: Required]
-    [property: EmailAddress]
+    [Required]
+    [EmailAddress]
+    [DataType(DataType.EmailAddress)]
     string? Email,
+    [DataType(DataType.Date)]
     DateTime? DateOfBirth,
+    [Required]
     GenderOptions? Gender,
+    [Required]
     Guid? CountryId,
+    [Required]
     string? Address,
     bool ReceiveNewsLetter
 )

@@ -1,22 +1,9 @@
 ﻿@model IEnumerable<PersonResponse>
 @{
     ViewBag.pageTitle = "Home";
-    SortOrderOptions ChangeSortOrder(SortOrderOptions sortOrder)
-    {
-        return sortOrder switch
-        {
-            SortOrderOptions.Ascending => SortOrderOptions.Descending,
-            SortOrderOptions.Descending => SortOrderOptions.Ascending,
-            _ => SortOrderOptions.Ascending
-        };
-    }
-    string Url(string currentSort)
-    {
-        return $"/persons/index?searchBy={ViewBag.CurrentSearchBy}&searchString={ViewBag.CurrentSearchString}&sortBy={currentSort}&sortOrder={ChangeSortOrder(ViewBag.CurrentSortOrder)}";
-    }
 }
 
-<form action="~/persons/index" method="get">
+<form asp-controller="Home" asp-action="CreatePerson" method="get">
     <div class="box flex">
         <div class="flex-1">
             <select class="form-input" name="searchBy">
@@ -45,18 +32,36 @@
     </div>
 </form>
 
+<a asp-action="CreatePerson" asp-controller="Home" class="link-hover">Create Person</a>
 <h1>Persons</h1>
 <table class="table w-100 mt">
     <thead>
         <tr>
-            <th><a href="@Url("Name")">Person Name</a><i class="fa-solid fa-arrow-down-long"></i></th>
-            <th><a href="@Url("Email")">Email</a></th>
-            <th><a href="@Url("DateOfBirth")">Date Of Birth</a></th>
-            <th><a href="@Url("Age")">Age</a></th>
-            <th><a href="@Url("Gender")">Gender</a></th>
-            <th><a href="@Url("Country")">Country</a></th>
-            <th><a href="@Url("Address")">Address</a></th>
-            <th><a href="@Url("ReceiveNewsLetters")">Receive News Letters</a></th>
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Name" }, { "DisplayName", "Person Name" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Email" }, { "DisplayName", "Email" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "DateOfBirth" }, { "DisplayName", "Date Of Birth" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Age" }, { "DisplayName", "Age" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Gender" }, { "DisplayName", "Gender" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Country" }, { "DisplayName", "Country" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "Address" }, { "DisplayName", "Address" } });
+            }
+            @{
+                await Html.RenderPartialAsync("_ColumnHeader", new ViewDataDictionary(ViewData) { { "ColumnName", "ReceiveNewsLetters" }, { "DisplayName", "Receive News Letters" } });
+            }
+            <th>Options</th>
         </tr>
     </thead>
     <tbody>
@@ -71,6 +76,7 @@
                 <td>@person.CountryName</td>
                 <td>@person.Address</td>
                 <td>@person.ReceiveNewsLetter</td>
+                <td><a asp-action="Update" asp-controller="Home" asp-route-id="@person.Id">Edit</a></td>
             </tr>
         }
     </tbody>
