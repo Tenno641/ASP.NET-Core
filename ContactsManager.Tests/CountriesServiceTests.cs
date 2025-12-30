@@ -1,5 +1,9 @@
 ﻿using Services.Countries;
 using ServicesContracts.Countries;
+using Entities.DataAccess;
+using Microsoft.EntityFrameworkCore;
+using ServicesContracts.DTO.Countries.Request;
+using ServicesContracts.DTO.Countries.Response;
 
 namespace ContactsManager.Tests;
 
@@ -8,7 +12,7 @@ public class CountriesServiceTests
     private readonly ICountriesService _service;
     public CountriesServiceTests()
     {
-        _service = new CountriesService(false);
+        _service = new CountriesService(new PersonsDbContext(new DbContextOptions<PersonsDbContext>()));
     }
 
     #region AddCountryTests
@@ -19,14 +23,14 @@ public class CountriesServiceTests
         CountryRequest? request = null;
 
         // Act
-        Assert.Throws<ArgumentNullException>(() => _service.AddCountry(request));
+        Assert.Throws<ArgumentNullException>(() => _service.AddCountryAsync(request));
     }
 
     [Fact]
     public void AddCountry_ThrowsArgumentNull_IfPropertyIsNull()
     {
         CountryRequest request = new CountryRequest() { Name = null };
-        Assert.Throws<ArgumentException>(() => _service.AddCountry(request));
+        Assert.Throws<ArgumentException>(() => _service.AddCountryAsync(request));
     }
 
     [Fact]
@@ -36,8 +40,8 @@ public class CountriesServiceTests
         CountryRequest request2 = new CountryRequest() { Name = "USA" };
         Assert.Throws<ArgumentException>(() =>
         {
-            _service.AddCountry(request);
-            _service.AddCountry(request2);
+            _service.AddCountryAsync(request);
+            _service.AddCountryAsync(request2);
         });
     }
 
@@ -48,8 +52,8 @@ public class CountriesServiceTests
         CountryRequest request = new CountryRequest() { Name = "GHANA" };
 
         // Act
-        CountryResponse response = _service.AddCountry(request);
-        IEnumerable<CountryResponse> actualCountries = _service.GetAll();
+        CountryResponse response = _service.AddCountryAsync(request);
+        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
 
         // Assert
         Assert.Contains(response, actualCountries);
@@ -61,7 +65,7 @@ public class CountriesServiceTests
     [Fact]
     public void GetAll_ReturnsEmptyList_NotAddingAnyData()
     {
-        IEnumerable<CountryResponse> actualCountries = _service.GetAll();
+        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
         Assert.Empty(actualCountries);
     }
 
@@ -78,10 +82,10 @@ public class CountriesServiceTests
 
         foreach (CountryRequest countryRequest in countriesRequests)
         {
-            resultCountries.Add(_service.AddCountry(countryRequest)); // COLOMBIA BEING ADDED TWICE!
+            resultCountries.Add(_service.AddCountryAsync(countryRequest)); // COLOMBIA BEING ADDED TWICE!
         }
 
-        IEnumerable<CountryResponse> actualCountries = _service.GetAll();
+        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
 
         foreach (CountryResponse expectedCountry in resultCountries)
         {
@@ -96,7 +100,7 @@ public class CountriesServiceTests
     public void Get_ReturnNull_IfIdIsNull()  
     {
         Guid? guid = null;
-        CountryResponse? countryResponse = _service.Get(guid);
+        CountryResponse? countryResponse = _service.GetAsync(guid);
         Assert.Null(countryResponse);
     }
 
@@ -105,10 +109,10 @@ public class CountriesServiceTests
     {
         // Arrange
         CountryRequest request = new CountryRequest() { Name = "LONDON" };
-        CountryResponse response = _service.AddCountry(request);
+        CountryResponse response = _service.AddCountryAsync(request);
 
         // Act
-        CountryResponse? countryResponse = _service.Get(response.Id);
+        CountryResponse? countryResponse = _service.GetAsync(response.Id);
 
         // Assert
         Assert.Equal(countryResponse, response);

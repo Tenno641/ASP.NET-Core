@@ -1,9 +1,9 @@
-﻿@model IEnumerable<PersonResponse>
+@model IEnumerable<PersonResponse>
 @{
     ViewBag.pageTitle = "Home";
 }
 
-<form asp-controller="Home" asp-action="CreatePerson" method="get">
+<form asp-controller="Home" asp-action="Index" method="get">
     <div class="box flex">
         <div class="flex-1">
             <select class="form-input" name="searchBy">
@@ -76,7 +76,10 @@
                 <td>@person.CountryName</td>
                 <td>@person.Address</td>
                 <td>@person.ReceiveNewsLetter</td>
-                <td><a asp-action="Update" asp-controller="Home" asp-route-id="@person.Id">Edit</a></td>
+                <td>
+                    <a asp-action="Update" asp-controller="Home" asp-route-id="@person.Id">Edit</a>
+                    <a asp-action="Delete" asp-controller="Home" asp-route-id="@person.Id">Delete</a>
+                </td>
             </tr>
         }
     </tbody>

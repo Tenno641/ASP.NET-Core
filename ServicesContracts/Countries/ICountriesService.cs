@@ -5,7 +5,7 @@ namespace ServicesContracts.Countries;
 
 public interface ICountriesService
 {
-    CountryResponse AddCountry(CountryRequest countryRequest);
-    IEnumerable<CountryResponse> GetAll();
-    CountryResponse? Get(Guid? id);
+    Task<CountryResponse> AddCountryAsync(CountryRequest countryRequest);
+    Task<IEnumerable<CountryResponse>> GetAllAsync();
+    Task<CountryResponse?> GetAsync(Guid? id);
 }

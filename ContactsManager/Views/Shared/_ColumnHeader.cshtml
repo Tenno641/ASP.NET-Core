@@ -1,4 +1,4 @@
-﻿@if (ViewBag.CurrentSortBy == ViewBag.ColumnName && ViewBag.CurrentSortOrder == SortOrderOptions.Ascending)
+@if (ViewBag.CurrentSortBy == ViewBag.ColumnName && ViewBag.CurrentSortOrder == SortOrderOptions.Ascending)
 {
     <th>
         <a asp-action="Index" asp-controller="Home" asp-route-searchby="@ViewBag.CurrentSearchBy" asp-route-searchString="@ViewBag.CurrentSearchString" asp-route-sortby="@ViewBag.ColumnName" asp-route-sortOrder="@SortOrderOptions.Descending.ToString()">@ViewBag.DisplayName</a>

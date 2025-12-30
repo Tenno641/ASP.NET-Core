@@ -1,43 +1,24 @@
 ﻿using Entities;
+using Entities.DataAccess;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Services.Helpers;
-using ServicesContracts.Countries;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Request;
 using ServicesContracts.DTO.Persons.Response;
 using ServicesContracts.Persons;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 namespace Services.Persons;
 public class PersonsService : IPersonsService
 {
-    private readonly List<Person> _persons = [];
-    private readonly ICountriesService _countriesService;
-    public PersonsService(ICountriesService countriesService, bool initialize = true)
+    private readonly PersonsDbContext _dbContext;
+    public PersonsService(PersonsDbContext dbContext)
     {
-        _persons.AddRange(
-    new() { Id = Guid.NewGuid(), Name = "Ahmed Ali", Email = "ahmed@example.com", DateOfBirth = new DateTime(1990, 5, 12), Gender = "Male", CountryId = Guid.Parse("11111111-1111-1111-1111-111111111111"), Address = "Cairo, Egypt", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Sara Hassan", Email = "sara@example.com", DateOfBirth = new DateTime(1992, 8, 20), Gender = "Female", CountryId = Guid.Parse("11111111-1111-1111-1111-111111111111"), Address = "Alexandria, Egypt", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "John Smith", Email = "john@example.com", DateOfBirth = new DateTime(1985, 3, 15), Gender = "Male", CountryId = Guid.Parse("22222222-2222-2222-2222-222222222222"), Address = "New York, USA", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Emily Clark", Email = "emily@example.com", DateOfBirth = new DateTime(1993, 11, 10), Gender = "Female", CountryId = Guid.Parse("22222222-2222-2222-2222-222222222222"), Address = "Los Angeles, USA", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "James Brown", Email = "james@example.com", DateOfBirth = new DateTime(1988, 7, 5), Gender = "Male", CountryId = Guid.Parse("33333333-3333-3333-3333-333333333333"), Address = "Berlin, Germany", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "Olivia Green", Email = "olivia@example.com", DateOfBirth = new DateTime(1995, 1, 22), Gender = "Female", CountryId = Guid.Parse("33333333-3333-3333-3333-333333333333"), Address = "Munich, Germany", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Max Müller", Email = "max@example.com", DateOfBirth = new DateTime(1982, 2, 18), Gender = "Male", CountryId = Guid.Parse("44444444-4444-4444-4444-444444444444"), Address = "London, UK", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Anna Schmidt", Email = "anna@example.com", DateOfBirth = new DateTime(1991, 9, 30), Gender = "Female", CountryId = Guid.Parse("44444444-4444-4444-4444-444444444444"), Address = "Manchester, UK", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "Pierre Dupont", Email = "pierre@example.com", DateOfBirth = new DateTime(1987, 6, 12), Gender = "Male", CountryId = Guid.Parse("55555555-5555-5555-5555-555555555555"), Address = "Paris, France", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Marie Curie", Email = "marie@example.com", DateOfBirth = new DateTime(1990, 12, 7), Gender = "Female", CountryId = Guid.Parse("55555555-5555-5555-5555-555555555555"), Address = "Lyon, France", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Luca Rossi", Email = "luca@example.com", DateOfBirth = new DateTime(1989, 4, 25), Gender = "Male", CountryId = Guid.Parse("66666666-6666-6666-6666-666666666666"), Address = "Rome, Italy", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "Giulia Bianchi", Email = "giulia@example.com", DateOfBirth = new DateTime(1994, 3, 19), Gender = "Female", CountryId = Guid.Parse("66666666-6666-6666-6666-666666666666"), Address = "Milan, Italy", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Carlos Ruiz", Email = "carlos@example.com", DateOfBirth = new DateTime(1986, 10, 8), Gender = "Male", CountryId = Guid.Parse("77777777-7777-7777-7777-777777777777"), Address = "Madrid, Spain", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Sofia Lopez", Email = "sofia@example.com", DateOfBirth = new DateTime(1992, 2, 14), Gender = "Female", CountryId = Guid.Parse("77777777-7777-7777-7777-777777777777"), Address = "Barcelona, Spain", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "Yuki Tanaka", Email = "yuki@example.com", DateOfBirth = new DateTime(1993, 5, 3), Gender = "Female", CountryId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Address = "Tokyo, Japan", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Ken Watanabe", Email = "ken@example.com", DateOfBirth = new DateTime(1985, 11, 27), Gender = "Male", CountryId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Address = "Osaka, Japan", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Omar Saleh", Email = "omar@example.com", DateOfBirth = new DateTime(1991, 6, 30), Gender = "Male", CountryId = Guid.Parse("12121212-1212-1212-1212-121212121212"), Address = "Riyadh, Saudi Arabia", ReceiveNewsLetter = false },
-    new() { Id = Guid.NewGuid(), Name = "Fatima Noor", Email = "fatima@example.com", DateOfBirth = new DateTime(1990, 9, 17), Gender = "Female", CountryId = Guid.Parse("12121212-1212-1212-1212-121212121212"), Address = "Jeddah, Saudi Arabia", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Youssef Amr", Email = "youssef@example.com", DateOfBirth = new DateTime(1988, 12, 2), Gender = "Male", CountryId = Guid.Parse("90909090-9090-9090-9090-909090909090"), Address = "Athens, Greece", ReceiveNewsLetter = true },
-    new() { Id = Guid.NewGuid(), Name = "Amina Zayed", Email = "amina@example.com", DateOfBirth = new DateTime(1992, 7, 11), Gender = "Female", CountryId = Guid.Parse("90909090-9090-9090-9090-909090909090"), Address = "Thessaloniki, Greece", ReceiveNewsLetter = false });
-        _countriesService = countriesService;
+        _dbContext = dbContext;
     }
-    public PersonResponse AddPerson(PersonRequest? personRequest)
+    public async Task<PersonResponse> AddPersonAsync(PersonRequest? personRequest)
     {
         ArgumentNullException.ThrowIfNull(personRequest);
         (bool isValid, IReadOnlyCollection<ValidationResult> validationResults) objectValidation = ValidationHelper.ValidateObject(personRequest);
@@ -47,85 +28,60 @@ public class PersonsService : IPersonsService
         Person person = personRequest.ToPerson();
         person.Id = Guid.NewGuid();
 
-        _persons.Add(person);
+        _dbContext.Persons.Add(person);
+        await _dbContext.SaveChangesAsync();
+        //InsertPersonStoredProcedure(person);
 
-        PersonResponse personResponse = ConvertPersonToPersonResponse(person);
-
-        return personResponse;
+        return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
     }
-
-    private PersonResponse ConvertPersonToPersonResponse(Person person)
-    {
-        PersonResponse personResponse = person.ToPersonResponse();
-        personResponse.CountryName = _countriesService.Get(personResponse.CountryId)?.Name;
-        return personResponse;
-    }
-
-    public PersonResponse? Get(Guid? id)
+    public async Task<PersonResponse?> GetAsync(Guid? id)
     {
         if (id is null) return null;
 
-        Person? person = _persons.FirstOrDefault(person => person.Id == id);
-        if (person is null) return null;
-
-        return ConvertPersonToPersonResponse(person);
+        return await _dbContext.Persons
+            .Include(person => person.Country)
+            .AsNoTracking()
+            .Where(person => person.Id == id)
+            .Select(PersonResponseExtension.ToPersonResponse)
+            .FirstOrDefaultAsync();
     }
-
-    public IEnumerable<PersonResponse> GetAll()
+    public async Task<IEnumerable<PersonResponse>> GetAllAsync()
     {
-        return _persons.Select(ConvertPersonToPersonResponse);
+        return await _dbContext.Persons.Include(person => person.Country).Select(PersonResponseExtension.ToPersonResponse).ToListAsync();
     }
-
-    private IEnumerable<PersonResponse> FilterGeneric<T>(IEnumerable<PersonResponse> data, Func<PersonResponse, T> selector, Func<T, bool> predicate)
+    public async Task<IEnumerable<PersonResponse>> FilterAsync(string searchBy, string? searchString)
     {
-        return data.Where(person => predicate(selector(person)));
-    }
-
-    public IEnumerable<PersonResponse> Filter(IEnumerable<PersonResponse> data, string searchBy, string? searchString)
-    {
-        if (searchString is null) return data;
+        if (searchString is null) return await GetAllAsync();
 
         return searchBy switch
         {
-            "Name" => FilterGeneric(data, person => person.Name, name => name?.Contains(searchString) ?? true),
-            "Email" => FilterGeneric(data, person => person.Email, email => email?.Contains(searchString) ?? true),
-            "DateOfBirth" => FilterGeneric(data, person => person.DateOfBirth, date => date?.ToString("dd mm yyy").Contains(searchString) ?? true),
-            "Age" => FilterGeneric(data, person => person.Age, age => age?.Equals(searchString) ?? true),
-            "Gender" => FilterGeneric(data, person => person.Gender, gender => gender?.Equals(searchString) ?? true),
-            "Country" => FilterGeneric(data, person => person.CountryName, country => country?.Equals(searchString) ?? true),
-            "Address" => FilterGeneric(data, person => person.Address, address => address?.Contains(searchString) ?? true),
-            "ReceiveNewsLetters" => FilterGeneric(data, person => person.ReceiveNewsLetter, receiveNews => receiveNews.Equals(searchString)),
-            _ => data
+            "Name" => await FilterGenericAsync(person => person.Name, name => name?.Contains(searchString) ?? true),
+            "Email" => await FilterGenericAsync(person => person.Email, email => email?.Contains(searchString) ?? true),
+            "DateOfBirth" => await FilterGenericAsync(person => person.DateOfBirth, date => date?.ToString("dd mm yyy").Contains(searchString) ?? true),
+            "Age" => await FilterGenericAsync(person => person.Age, age => age?.Equals(searchString) ?? true),
+            "Gender" => await FilterGenericAsync(person => person.Gender, gender => gender?.Equals(searchString) ?? true),
+            "Country" => await FilterGenericAsync(person => person.CountryName, country => country?.Equals(searchString) ?? true),
+            "Address" => await FilterGenericAsync(person => person.Address, address => address?.Contains(searchString) ?? true),
+            "ReceiveNewsLetters" => await FilterGenericAsync(person => person.ReceiveNewsLetter, receiveNews => receiveNews.Equals(searchString)),
+            _ => await GetAllAsync()
         };
     }
-
-    private IEnumerable<PersonResponse> OrderGeneric<T>(IEnumerable<PersonResponse> data, Func<PersonResponse, T> selector, SortOrderOptions sortOrderOptions)
-    {
-        return sortOrderOptions switch
-        {
-            SortOrderOptions.Descending => data.OrderByDescending(selector),
-            SortOrderOptions.Ascending => data.OrderBy(selector),
-            _ => GetAll()
-        };
-    }
-
-    public IEnumerable<PersonResponse> Order(IEnumerable<PersonResponse> data, string sortBy, SortOrderOptions sortOptions)
+    public async Task<IEnumerable<PersonResponse>> OrderAsync(string sortBy, SortOrderOptions sortOptions)
     {
         return sortBy switch
         {
-            "Name" => OrderGeneric(data, person => person.Name, sortOptions),
-            "Email" => OrderGeneric(data, person => person.Email, sortOptions),
-            "DateOfBirth" => OrderGeneric(data, person => person.DateOfBirth, sortOptions),
-            "Age" => OrderGeneric(data, person => person.Age, sortOptions),
-            "Gender" => OrderGeneric(data, person => person.Gender, sortOptions),
-            "Country" => OrderGeneric(data, person => person.CountryName, sortOptions),
-            "Address" => OrderGeneric(data, person => person.Address, sortOptions),
-            "ReceiveNewsLetters" => OrderGeneric(data, person => person.ReceiveNewsLetter, sortOptions),
-            _ => GetAll()
+            "Name" => await OrderGenericAsync(person => person.Name, sortOptions),
+            "Email" => await OrderGenericAsync(person => person.Email, sortOptions),
+            "DateOfBirth" => await OrderGenericAsync(person => person.DateOfBirth, sortOptions),
+            "Age" => await OrderGenericAsync(person => person.Age, sortOptions),
+            "Gender" => await OrderGenericAsync(person => person.Gender, sortOptions),
+            "Country" => await OrderGenericAsync(person => person.CountryName, sortOptions),
+            "Address" => await OrderGenericAsync(person => person.Address, sortOptions),
+            "ReceiveNewsLetters" => await OrderGenericAsync(person => person.ReceiveNewsLetter, sortOptions),
+            _ => await GetAllAsync()
         };
     }
-
-    public PersonResponse Update(PersonUpdateRequest? personUpdateRequest)
+    public async Task<PersonResponse> UpdateAsync(PersonUpdateRequest? personUpdateRequest)
     {
         ArgumentNullException.ThrowIfNull(personUpdateRequest);
 
@@ -133,15 +89,45 @@ public class PersonsService : IPersonsService
 
         if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.errors.Select(error => error.ErrorMessage)));
 
-        Person? person = _persons.Find(person => person.Id == personUpdateRequest.Id);
+        Person? person = _dbContext.Persons.FirstOrDefault(person => person.Id == personUpdateRequest.Id);
 
         if (person is null) throw new ArgumentException("Not Found Person");
 
         UpdatePerson(personUpdateRequest, person);
+        await _dbContext.SaveChangesAsync();
 
-        return ConvertPersonToPersonResponse(person);
+        return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
     }
+    public async Task<bool> DeleteAsync(Guid? id)
+    {
+        ArgumentNullException.ThrowIfNull(id);
 
+        Person? person = await _dbContext.Persons.FirstOrDefaultAsync(person => person.Id == id);
+        if (person is null) return false;
+
+        _dbContext.Remove(person);
+        return await _dbContext.SaveChangesAsync() > 0;
+    }
+    public IEnumerable<Person> GetAllPersonsStoredProcedure()
+    {
+        FormattableString query = FormattableStringFactory.Create("EXECUTE [dbo].[PersonsGet]");
+        return _dbContext.Persons.FromSql(query);
+    }
+    public void InsertPersonStoredProcedure(Person person)
+    {
+        SqlParameter[] sqlParameters = new SqlParameter[]
+        {
+            new("@Id", person.Id),
+            new("@Name", person.Name),
+            new("@Email", person.Email),
+            new("@DateOfBirth", person.DateOfBirth),
+            new("@Gender", person.Gender),
+            new("@CountryId", person.CountryId),
+            new("@Address", person.Address),
+            new("@ReceiveNewsLetter", person.ReceiveNewsLetter)
+        };
+        _dbContext.Database.ExecuteSqlRaw("EXECUTE [dbo].[PersonInsert] @Id, @Name, @Email, @DateOfBirth, @Gender, @CountryId, @Address, @ReceiveNewsLetter", sqlParameters);
+    }
     private static void UpdatePerson(PersonUpdateRequest personUpdateRequest, Person person)
     {
         person.Address = personUpdateRequest.Address ?? person.Address;
@@ -152,15 +138,17 @@ public class PersonsService : IPersonsService
         person.Name = personUpdateRequest.Name ?? person.Name;
         person.ReceiveNewsLetter = personUpdateRequest.ReceiveNewsLetter;
     }
-
-    public bool Delete(Guid? id)
+    private async Task<IEnumerable<PersonResponse>> OrderGenericAsync<T>(Func<PersonResponse, T> selector, SortOrderOptions sortOrderOptions)
     {
-        ArgumentNullException.ThrowIfNull(id);
-
-        Person? person = _persons.Find(person => person.Id == id);
-        if (person is null) return false;
-
-        return _persons.Remove(person);
-
+        return sortOrderOptions switch
+        {
+            SortOrderOptions.Descending => _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).OrderByDescending(selector),
+            SortOrderOptions.Ascending => _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).OrderBy(selector),
+            _ => await GetAllAsync()
+        };
+    }
+    private async Task<IEnumerable<PersonResponse>> FilterGenericAsync<T>(Func<PersonResponse, T> selector, Func<T, bool> predicate)
+    {
+        return await _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).Where(person => predicate(selector(person))).ToListAsync();
     }
 }

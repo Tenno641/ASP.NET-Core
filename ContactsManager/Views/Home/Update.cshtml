@@ -12,7 +12,7 @@
                 <label class="form-label" asp-for="Name">Name</label>
             </div>
             <div class="flex-1">
-                <input class="form-input" asp-for="Name" required />
+                <input class="form-input" asp-for="Name" />
             </div>
         </div>
         <div class="flex form-field">
@@ -20,7 +20,7 @@
                 <label class="form-label" asp-for="Email">Email</label>
             </div>
             <div class="flex-1">
-                <input class="form-input" asp-for="Email" required />
+                <input class="form-input" asp-for="Email" />
                 <span asp-validation-for="Email" class="text-red"></span>
             </div>
         </div>
@@ -29,7 +29,7 @@
                 <label class="form-label" asp-for="DateOfBirth">Date Of Birth</label>
             </div>
             <div class="flex-1">
-                <input class="form-input" asp-for="DateOfBirth" type="date" required />
+                <input class="form-input" asp-for="DateOfBirth" type="date" />
             </div>
         </div>
         <div class="flex form-field">
@@ -43,7 +43,7 @@
                 @foreach (string option in genderOptions)
                 {
                     <label for="@option">@option</label>
-                    <input type="radio" asp-for="Gender" value="@option" required />
+                    <input type="radio" asp-for="Gender" value="@option"/>
                 }
             </div>
         </div>
@@ -53,7 +53,6 @@
             </div>
             <div class="flex-1 w-25">
                 <select class="form-input" asp-for="CountryId" asp-items="@ViewBag.Countries">
-                    <option value="">Please Select</option>
                 </select>
             </div>
         </div>
@@ -62,7 +61,7 @@
                 <label class="form-label" asp-for="Address">Address</label>
             </div>
             <div class="flex-1">
-                <textarea class="form-input" asp-for="Address" value="@Model.Address" required></textarea>
+                <textarea class="form-input" asp-for="Address"></textarea>
                 <span class="text-red" asp-validation-for="Address"></span>
             </div>
         </div>
@@ -71,7 +70,7 @@
                 <label class="form-label" asp-for="ReceiveNewsLetter">Receive News Letters</label>
             </div>
             <div class="flex-1">
-                <input type="checkbox" asp-for="ReceiveNewsLetter" value="@Model.ReceiveNewsLetter" checked />
+                <input type="checkbox" asp-for="ReceiveNewsLetter" />
             </div>
         </div>
         <div class="flex form-field">

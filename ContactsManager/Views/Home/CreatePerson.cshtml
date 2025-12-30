@@ -61,7 +61,7 @@
                 <label class="form-label" for="Address">Address</label>
             </div>
             <div class="flex-1">
-                <textarea class="form-input" asp-for="Address" required></textarea>
+                <textarea class="form-input" asp-for="Address" maxlength="50"></textarea>
                 <span class="text-red" asp-validation-for="Address"></span>
             </div>
         </div>

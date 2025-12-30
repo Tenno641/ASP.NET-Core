@@ -5,6 +5,10 @@ using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Response;
 using ServicesContracts.Countries;
 using Services.Countries;
+using ServicesContracts.DTO.Countries.Response;
+using ServicesContracts.DTO.Countries.Request;
+using Entities.DataAccess;
+using Microsoft.EntityFrameworkCore;
 
 public class PersonsServiceTests
 {
@@ -12,8 +16,9 @@ public class PersonsServiceTests
     private readonly ICountriesService _countriesService;
     public PersonsServiceTests()
     {
-        _countriesService = new CountriesService(false);
-        _service = new PersonsService(_countriesService, false);
+        PersonsDbContext personsDbContext = new PersonsDbContext(new DbContextOptions<PersonsDbContext>());
+        _countriesService = new CountriesService(personsDbContext);
+        _service = new PersonsService(_countriesService, personsDbContext);
     }
 
     #region Add Person
@@ -28,7 +33,7 @@ public class PersonsServiceTests
     public void AddPerson_ThrowsArgumentException_IfPropertyIsNull()
     {
         // Arrange
-        PersonRequest request = new() { Name = null };
+        PersonRequest request = new(null, null, null, null, null, null, false);
 
         // Assert
         Assert.Throws<ArgumentException>(() =>
@@ -41,16 +46,16 @@ public class PersonsServiceTests
     public void AddPerson_AddPerson_()
     {
         // Arrange
-        PersonRequest request = new()
-        {
-            Name = "User-Name",
-            Email = "Example@gmail.com",
-            Address = "User-Address",
-            CountryId = Guid.NewGuid(),
-            DateOfBirth = DateTime.Parse("2000-02-02"),
-            Gender = GenderOptions.Male,
-            ReceiveNewsLetter = false
-        };
+        PersonRequest request = new
+       (
+            "User-Name",
+            "Example@gmail.com",
+            DateTime.Parse("2000-02-02"),
+            GenderOptions.Male,
+            Guid.NewGuid(),
+            "User-Address",
+            false
+        );
 
         // Act
         PersonResponse response = _service.AddPerson(request);
@@ -76,7 +81,7 @@ public class PersonsServiceTests
     {
         // Arrange
         CountryRequest countryRequest = new() { Name = "London" };
-        CountryResponse countryResponse = _countriesService.AddCountry(countryRequest);
+        CountryResponse countryResponse = _countriesService.AddCountryAsync(countryRequest);
         PersonRequest personRequest = CreatePerson(countryResponse);
 
         // Act
@@ -89,16 +94,16 @@ public class PersonsServiceTests
 
     private static PersonRequest CreatePerson(CountryResponse countryResponse)
     {
-        return new()
-        {
-            Name = "Mister-Name",
-            Address = "User-Address",
-            CountryId = countryResponse.Id,
-            DateOfBirth = DateTime.Parse("2000-02-02"),
-            Email = "Example@gmail.com",
-            Gender = GenderOptions.Male,
-            ReceiveNewsLetter = false
-        };
+        return new
+       (
+            "User-Name",
+            "Example@gmail.com",
+            DateTime.Parse("2000-02-02"),
+            GenderOptions.Male,
+            Guid.NewGuid(),
+            "User-Address",
+            false
+        );
     }
     #endregion
 
@@ -119,8 +124,8 @@ public class PersonsServiceTests
         CountryRequest countryRequest1 = new() { Name = "London" };
         CountryRequest countryRequest2 = new() { Name = "USA" };
 
-        CountryResponse countryResponse1 = _countriesService.AddCountry(countryRequest1);
-        CountryResponse countryResponse2 = _countriesService.AddCountry(countryRequest2);
+        CountryResponse countryResponse1 = _countriesService.AddCountryAsync(countryRequest1);
+        CountryResponse countryResponse2 = _countriesService.AddCountryAsync(countryRequest2);
 
         IEnumerable<PersonRequest> personRequests =
             [
@@ -129,14 +134,14 @@ public class PersonsServiceTests
             ];
 
         // Act
-        foreach(PersonRequest request in personRequests)
+        foreach (PersonRequest request in personRequests)
         {
             personResponses.Add(_service.AddPerson(request));
         }
         IEnumerable<PersonResponse> actualPersonResponses = _service.GetAll();
 
         // Assert
-        foreach(PersonResponse person in personResponses)
+        foreach (PersonResponse person in personResponses)
         {
             Assert.Contains(person, actualPersonResponses);
         }
@@ -152,8 +157,8 @@ public class PersonsServiceTests
         CountryRequest countryRequest1 = new() { Name = "London" };
         CountryRequest countryRequest2 = new() { Name = "USA" };
 
-        CountryResponse countryResponse1 = _countriesService.AddCountry(countryRequest1);
-        CountryResponse countryResponse2 = _countriesService.AddCountry(countryRequest2);
+        CountryResponse countryResponse1 = _countriesService.AddCountryAsync(countryRequest1);
+        CountryResponse countryResponse2 = _countriesService.AddCountryAsync(countryRequest2);
 
         IEnumerable<PersonRequest> personRequests =
             [
@@ -162,16 +167,16 @@ public class PersonsServiceTests
             ];
 
         // Act
-        foreach(PersonRequest request in personRequests)
+        foreach (PersonRequest request in personRequests)
         {
             _service.AddPerson(request);
         }
 
-        IEnumerable<PersonResponse> personResponses = _service.Filter(person => person.Name, name => name?.StartsWith('m') ?? false);
+        IEnumerable<PersonResponse> personResponses = _service.Filter(_service.GetAll(), "Name", "m");
         IEnumerable<PersonResponse> actualPersonResponses = _service.GetAll().Where(person => person.Name?.StartsWith('m') ?? false);
 
         // Assert
-        Assert.Equal(actualPersonResponses, personResponses); 
+        Assert.Equal(actualPersonResponses, personResponses);
     }
     #endregion
 }

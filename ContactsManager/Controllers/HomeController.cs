@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Persons;
@@ -19,22 +20,19 @@ public class HomeController : Controller
     }
 
     [Route("[action]")]
-    public IActionResult Index(string searchBy, string searchString, string sortBy = nameof(PersonResponse.Name), SortOrderOptions sortOrder = SortOrderOptions.Ascending)
+    public async Task<IActionResult> Index(string searchBy, string searchString, string sortBy = nameof(PersonResponse.Name), SortOrderOptions sortOrder = SortOrderOptions.Ascending)
     {
         ViewBag.SearchOptions = new Dictionary<string, string>() {
             { "Name", "Person Name"}, {"Email", "Email"}, {"DateOfBirth","Date Of Birth" }, {"Age", "Age"},{"Gender","Gender"}, {"Country", "Gender"},{"Address","Address"}, {"ReceiveNewsLetters", "Receive News Letters" }
         };
+
         ViewBag.CurrentSearchBy = searchBy;
         ViewBag.CurrentSearchString = searchString;
 
-        IEnumerable<PersonResponse> persons = _personsService.GetAll();
-
-        IEnumerable<PersonResponse> filteredPersons = _personsService.Filter(persons, searchBy, searchString);
-
         ViewBag.CurrentSortBy = sortBy;
-        ViewBag.CurrentSortOrder = sortOrder;
+        ViewBag.CurrentSortOrder = sortOrder;   
 
-        IEnumerable<PersonResponse> sortedPersons = _personsService.Order(filteredPersons, sortBy, sortOrder);
+        IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(sortBy, sortOrder);
 
         return View(sortedPersons);
     }
@@ -47,36 +45,36 @@ public class HomeController : Controller
 
     [Route("[action]")]
     [HttpGet]
-    public IActionResult CreatePerson()
+    public async Task<IActionResult> CreatePerson()
     {
-        ViewBag.Countries = GetCountriesListItem();
+        ViewBag.Countries = await GetCountriesListItemsAsync();
         return View();
     }
 
     [Route("[action]")]
     [HttpPost]
-    public IActionResult CreatePerson(PersonRequest personRequest)
+    public async Task<IActionResult> CreatePerson(PersonRequest personRequest)
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Countries = GetCountriesListItem();
+            ViewBag.Countries = GetCountriesListItemsAsync();
             ViewBag.Errors = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
             return View();
         }
-        _personsService.AddPerson(personRequest);
+        await _personsService.AddPersonAsync(personRequest);
         return RedirectToAction("Index", "Home");
     }
 
     [Route("[action]/{id:guid}")]
     [HttpGet]
-    public IActionResult Update(Guid id)
+    public async Task<IActionResult> Update(Guid id)
     {
-        PersonResponse? person = _personsService.Get(id);
+        PersonResponse? person = await _personsService.GetAsync(id);
         if (person is null)
         {
             return RedirectToAction(actionName: "Index", controllerName: "Home");
         }
-        IEnumerable<SelectListItem> countries = GetCountriesListItem();
+        IEnumerable<SelectListItem> countries = await GetCountriesListItemsAsync();
         ViewBag.Countries = countries;
 
         PersonUpdateRequest personUpdate = person.Value.ToPersonUpdateRequest();
@@ -85,9 +83,9 @@ public class HomeController : Controller
 
     [Route("[action]")]
     [HttpPost]
-    public IActionResult Update(PersonUpdateRequest personUpdateRequest)
+    public async Task<IActionResult> Update(PersonUpdateRequest personUpdateRequest)
     {
-        PersonResponse? person = _personsService.Get(personUpdateRequest.Id);
+        PersonResponse? person = await _personsService.GetAsync(personUpdateRequest.Id);
         if (person is null)
         {
             return RedirectToAction(actionName: "Index", controllerName: "Home");
@@ -95,18 +93,38 @@ public class HomeController : Controller
 
         if (!ModelState.IsValid)
         {
-            IEnumerable<SelectListItem> countries = GetCountriesListItem();
+            IEnumerable<SelectListItem> countries = await GetCountriesListItemsAsync();
             ViewBag.Countries = countries;
             ViewBag.Errors = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage);
-            return View(personUpdateRequest);
+            ModelState.Clear();
+            return View(person.Value.ToPersonUpdateRequest());
         }
 
-        _personsService.Update(personUpdateRequest);
+        await _personsService.UpdateAsync(personUpdateRequest);
         return RedirectToAction(actionName: "Index", controllerName: "Home");
     }
-    private IEnumerable<SelectListItem> GetCountriesListItem()
+
+    [Route("[action]/{id:guid}")]
+    [HttpGet]
+    public async Task<IActionResult> Delete(Guid id)
     {
-        return _countriesService.GetAll().Select(country => new SelectListItem() { Text = country.Name, Value = country.Id.ToString() });
+        PersonResponse? person = await _personsService.GetAsync(id);
+        if (person is null)
+        {
+            return RedirectToAction(actionName: "Index");
+        }
+        return View(person);
     }
 
+    [Route("[action]")]
+    [HttpPost]
+    public async Task<IActionResult> Delete(PersonUpdateRequest personUpdateRequest)
+    {
+        await _personsService.DeleteAsync(personUpdateRequest.Id);
+        return RedirectToAction(actionName: "Index");
+    }
+    private async Task<IEnumerable<SelectListItem>> GetCountriesListItemsAsync()
+    {
+        return (await _countriesService.GetAllAsync()).Select(country => new SelectListItem() { Text = country.Name, Value = country.Id.ToString() });
+    }
 }

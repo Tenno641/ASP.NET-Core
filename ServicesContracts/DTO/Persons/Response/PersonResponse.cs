@@ -1,5 +1,6 @@
 ﻿using Entities;
 using ServicesContracts.DTO.Persons.Request;
+using System.Linq.Expressions;
 
 namespace ServicesContracts.DTO.Persons.Response;
 public record struct PersonResponse
@@ -18,20 +19,19 @@ public record struct PersonResponse
 
 public static class PersonResponseExtension
 {
-    public static PersonResponse ToPersonResponse(this Person person) {
-        return new PersonResponse()
-        {
-            Id = person.Id,
-            Name = person.Name,
-            Email = person.Email,
-            DateOfBirth = person.DateOfBirth,
-            Gender = person.Gender,
-            CountryId = person.CountryId,
-            Address = person.Address,
-            ReceiveNewsLetter = person.ReceiveNewsLetter,
-            Age = CalculateAge(person.DateOfBirth)
-        };
-    }
+    public static Expression<Func<Person, PersonResponse>> ToPersonResponse => person => new PersonResponse()
+    {
+        Id = person.Id,
+        Name = person.Name,
+        Email = person.Email,
+        DateOfBirth = person.DateOfBirth,
+        Gender = person.Gender,
+        CountryId = person.CountryId,
+        Address = person.Address,
+        ReceiveNewsLetter = person.ReceiveNewsLetter,
+        Age = CalculateAge(person.DateOfBirth),
+        CountryName = person.Country != null ? person.Country.Name : null
+    };
 
     public static PersonUpdateRequest ToPersonUpdateRequest(this PersonResponse personResponse)
     {
