@@ -1,6 +1,7 @@
 ﻿using Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Rotativaio.AspNetCore;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Request;
@@ -30,7 +31,7 @@ public class HomeController : Controller
         ViewBag.CurrentSearchString = searchString;
 
         ViewBag.CurrentSortBy = sortBy;
-        ViewBag.CurrentSortOrder = sortOrder;   
+        ViewBag.CurrentSortOrder = sortOrder;
 
         IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(sortBy, sortOrder);
 
@@ -122,6 +123,15 @@ public class HomeController : Controller
     {
         await _personsService.DeleteAsync(personUpdateRequest.Id);
         return RedirectToAction(actionName: "Index");
+    }
+    [Route("PersonsPdf")]
+    public async Task<IActionResult> PersonsPdf()
+    {
+        IEnumerable<PersonResponse> persons = await _personsService.GetAllAsync();
+        return new ViewAsPdf(persons)
+        {
+            PageOrientation = Orientation.Landscape
+        };
     }
     private async Task<IEnumerable<SelectListItem>> GetCountriesListItemsAsync()
     {
