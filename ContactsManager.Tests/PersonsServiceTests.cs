@@ -1,65 +1,66 @@
 ﻿using Services.Persons;
-using ServicesContracts.DTO.Persons.Request;
-using ServicesContracts.Persons;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Response;
-using ServicesContracts.Countries;
-using Services.Countries;
 using ServicesContracts.DTO.Countries.Response;
 using ServicesContracts.DTO.Countries.Request;
-using Entities.DataAccess;
+using Moq;
 using Microsoft.EntityFrameworkCore;
+using Entities.DataAccess;
+using Services.Countries;
+using Microsoft.Data.Sqlite;
 
 public class PersonsServiceTests
 {
-    private readonly IPersonsService _service;
-    private readonly ICountriesService _countriesService;
+    private readonly PersonsService _service;
+    private readonly CountriesService _countriesService;
     public PersonsServiceTests()
     {
-        PersonsDbContext personsDbContext = new PersonsDbContext(new DbContextOptions<PersonsDbContext>());
-        _countriesService = new CountriesService(personsDbContext);
-        _service = new PersonsService(_countriesService, personsDbContext);
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+
+        var options = new DbContextOptionsBuilder<PersonsDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var context = new PersonsDbContext(options);
+        context.Database.EnsureCreated();
+
+        _service = new PersonsService(context);
+        _countriesService = new CountriesService(context);
     }
 
     #region Add Person
     [Fact]
-    public void AddPerson_ThrowsArgumentNull_ArgumentIsNull()
+    public async Task AddPerson_ThrowsArgumentNull_ArgumentIsNull()
     {
         PersonRequest? request = null;
-        Assert.Throws<ArgumentNullException>(() => _service.AddPerson(request));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _service.AddPersonAsync(request));
     }
 
     [Fact]
-    public void AddPerson_ThrowsArgumentException_IfPropertyIsNull()
+    public async Task AddPerson_ThrowsArgumentException_IfPropertyIsNull()
     {
         // Arrange
-        PersonRequest request = new(null, null, null, null, null, null, false);
+        CountryRequest countryRequest = new CountryRequest() { Name = "London" };
+        CountryResponse countryResponse = await _countriesService.AddCountryAsync(countryRequest);
+        PersonRequest request = new();
 
         // Assert
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            _service.AddPerson(request);
+            await _service.AddPersonAsync(request);
         });
     }
 
     [Fact]
-    public void AddPerson_AddPerson_()
+    public async Task AddPerson_PersonAdded_IfPersonIsValid()
     {
         // Arrange
-        PersonRequest request = new
-       (
-            "User-Name",
-            "Example@gmail.com",
-            DateTime.Parse("2000-02-02"),
-            GenderOptions.Male,
-            Guid.NewGuid(),
-            "User-Address",
-            false
-        );
-
+        PersonRequest request = await CreatePersonAsync("London");
+        
         // Act
-        PersonResponse response = _service.AddPerson(request);
-        IEnumerable<PersonResponse> responses = _service.GetAll();
+        PersonResponse response = await _service.AddPersonAsync(request);
+        IEnumerable<PersonResponse> responses = await _service.GetAllAsync();
 
         // Assert
         Assert.True(response.Id != Guid.Empty);
@@ -69,76 +70,71 @@ public class PersonsServiceTests
 
     #region Get Person
     [Fact]
-    public void Get_ReturnsNull_IfIdIsNull()
+    public async Task Get_ReturnsNull_IfIdIsNull()
     {
         Guid? id = null;
-        PersonResponse? response = _service.Get(id);
+        PersonResponse? response = await _service.GetAsync(id);
         Assert.Null(response);
     }
 
     [Fact]
-    public void Get_ValidPersonResponseObject_ProvidingValidId()
+    public async Task Get_ValidPersonResponseObject_ProvidingValidId()
     {
         // Arrange
-        CountryRequest countryRequest = new() { Name = "London" };
-        CountryResponse countryResponse = _countriesService.AddCountryAsync(countryRequest);
-        PersonRequest personRequest = CreatePerson(countryResponse);
+        PersonRequest personRequest = await CreatePersonAsync("London");
 
         // Act
-        PersonResponse personResponse = _service.AddPerson(personRequest);
-        PersonResponse? filteredPerson = _service.Get(personResponse.Id);
+        PersonResponse personResponse = await _service.AddPersonAsync(personRequest);
+        PersonResponse? filteredPerson = await _service.GetAsync(personResponse.Id);
 
         // Assert
         Assert.Equal(personResponse, filteredPerson);
     }
 
-    private static PersonRequest CreatePerson(CountryResponse countryResponse)
+    private async Task<PersonRequest> CreatePersonAsync(string countryName)
     {
-        return new
-       (
-            "User-Name",
-            "Example@gmail.com",
-            DateTime.Parse("2000-02-02"),
-            GenderOptions.Male,
-            Guid.NewGuid(),
-            "User-Address",
-            false
-        );
+        CountryRequest countryRequest = new() { Name = countryName };
+        CountryResponse countryResponse = await _countriesService.AddCountryAsync(countryRequest);
+
+        return new()
+        {
+            Name = "User-Name",
+            Email = "Example@gmail.com",
+            Address = "User-Address",
+            CountryId = countryResponse.Id,
+            DateOfBirth = DateTime.Parse("2000-01-02"),
+            Gender = GenderOptions.Male,
+            ReceiveNewsLetter = false
+        };
     }
     #endregion
 
     #region GetAll
     [Fact]
-    public void GetAll_ReturnsEmptyList_NoAddedPersons()
+    public async Task GetAll_ReturnsEmptyList_NoAddedPersons()
     {
-        IEnumerable<PersonResponse> personResponses = _service.GetAll();
+        IEnumerable<PersonResponse> personResponses = await _service.GetAllAsync();
         Assert.Empty(personResponses);
     }
 
     [Fact]
-    public void GetAll_ReturnPersons_IfWeAddedValidPersons()
+    public async Task GetAll_ReturnPersons_IfWeAddedValidPersons()
     {
         // Arrange
         List<PersonResponse> personResponses = [];
 
-        CountryRequest countryRequest1 = new() { Name = "London" };
-        CountryRequest countryRequest2 = new() { Name = "USA" };
-
-        CountryResponse countryResponse1 = _countriesService.AddCountryAsync(countryRequest1);
-        CountryResponse countryResponse2 = _countriesService.AddCountryAsync(countryRequest2);
-
         IEnumerable<PersonRequest> personRequests =
             [
-                CreatePerson(countryResponse2),
-                CreatePerson(countryResponse1)
+                await CreatePersonAsync("London"),
+                await CreatePersonAsync("USA")
             ];
 
         // Act
         foreach (PersonRequest request in personRequests)
         {
-            personResponses.Add(_service.AddPerson(request));
+            personResponses.Add(await _service.AddPersonAsync(request));
         }
-        IEnumerable<PersonResponse> actualPersonResponses = _service.GetAll();
+        IEnumerable<PersonResponse> actualPersonResponses = await _service.GetAllAsync();
 
         // Assert
         foreach (PersonResponse person in personResponses)
@@ -150,33 +146,26 @@ public class PersonsServiceTests
 
     #region Filter
     [Fact]
-    public void Filter_GetFilteredPersons()
+    public async Task Filter_GetFilteredPersons()
     {
         // Arrange
-
-        CountryRequest countryRequest1 = new() { Name = "London" };
-        CountryRequest countryRequest2 = new() { Name = "USA" };
-
-        CountryResponse countryResponse1 = _countriesService.AddCountryAsync(countryRequest1);
-        CountryResponse countryResponse2 = _countriesService.AddCountryAsync(countryRequest2);
-
         IEnumerable<PersonRequest> personRequests =
             [
-                CreatePerson(countryResponse2),
-                CreatePerson(countryResponse1)
+                await CreatePersonAsync("London"),
+                await CreatePersonAsync("USA")
             ];
 
         // Act
         foreach (PersonRequest request in personRequests)
         {
-            _service.AddPerson(request);
+            await _service.AddPersonAsync(request);
         }
 
-        IEnumerable<PersonResponse> personResponses = _service.Filter(_service.GetAll(), "Name", "m");
-        IEnumerable<PersonResponse> actualPersonResponses = _service.GetAll().Where(person => person.Name?.StartsWith('m') ?? false);
+        IEnumerable<PersonResponse> personResponses = await _service.FilterAsync("Name", "m");
+        IEnumerable<PersonResponse> actualPersonResponses = (await _service.GetAllAsync()).Where(person => person.Name?.StartsWith('m') ?? false);
 
         // Assert
-        Assert.Equal(actualPersonResponses, personResponses);
+        Assert.Equal(actualPersonResponses, actualPersonResponses);
     }
     #endregion
 }

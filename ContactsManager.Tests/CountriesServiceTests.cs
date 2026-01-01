@@ -1,7 +1,7 @@
-﻿using Services.Countries;
-using ServicesContracts.Countries;
-using Entities.DataAccess;
+﻿using Entities.DataAccess;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Services.Countries;
 using ServicesContracts.DTO.Countries.Request;
 using ServicesContracts.DTO.Countries.Response;
 
@@ -9,51 +9,61 @@ namespace ContactsManager.Tests;
 
 public class CountriesServiceTests
 {
-    private readonly ICountriesService _service;
+    private readonly CountriesService _service;
     public CountriesServiceTests()
     {
-        _service = new CountriesService(new PersonsDbContext(new DbContextOptions<PersonsDbContext>()));
+        var connection = new SqliteConnection("DataSource=:memory:");
+        connection.Open();
+
+        var options = new DbContextOptionsBuilder<PersonsDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var context = new PersonsDbContext(options);
+        context.Database.EnsureCreated();
+
+        _service = new CountriesService(context);
     }
 
     #region AddCountryTests
     [Fact]
-    public void AddCountry_ReturnsNull_IfArgumentIsNull()
+    public async Task AddCountry_ReturnsNull_IfArgumentIsNull()
     {
         // Arrange
         CountryRequest? request = null;
 
         // Act
-        Assert.Throws<ArgumentNullException>(() => _service.AddCountryAsync(request));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _service.AddCountryAsync(request));
     }
 
     [Fact]
-    public void AddCountry_ThrowsArgumentNull_IfPropertyIsNull()
+    public async Task AddCountry_ThrowsArgumentNull_IfPropertyIsNull()
     {
         CountryRequest request = new CountryRequest() { Name = null };
-        Assert.Throws<ArgumentException>(() => _service.AddCountryAsync(request));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await _service.AddCountryAsync(request));
     }
 
     [Fact]
-    public void AddCountry_ThrowsArgument_IfCountryAlreadyExists()
+    public async Task AddCountry_ThrowsArgument_IfCountryAlreadyExists()
     {
         CountryRequest request = new CountryRequest() { Name = "USA" };
         CountryRequest request2 = new CountryRequest() { Name = "USA" };
-        Assert.Throws<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
         {
-            _service.AddCountryAsync(request);
-            _service.AddCountryAsync(request2);
+            await _service.AddCountryAsync(request);
+            await _service.AddCountryAsync(request2);
         });
     }
 
     [Fact]
-    public void AddCountry_AddCountryToRepository()
+    public async Task AddCountry_AddCountryToRepository()
     {
         // Arrange 
         CountryRequest request = new CountryRequest() { Name = "GHANA" };
 
         // Act
-        CountryResponse response = _service.AddCountryAsync(request);
-        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
+        CountryResponse response = await _service.AddCountryAsync(request);
+        IEnumerable<CountryResponse> actualCountries = await _service.GetAllAsync();
 
         // Assert
         Assert.Contains(response, actualCountries);
@@ -63,14 +73,14 @@ public class CountriesServiceTests
 
     #region GetAll
     [Fact]
-    public void GetAll_ReturnsEmptyList_NotAddingAnyData()
+    public async Task GetAll_ReturnsEmptyList_NotAddingAnyData()
     {
-        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
+        IEnumerable<CountryResponse> actualCountries = await _service.GetAllAsync();
         Assert.Empty(actualCountries);
     }
 
     [Fact]
-    public void GetAll_ReturnExistingCountries_AddingCountries()
+    public async Task GetAll_ReturnExistingCountries_AddingCountries()
     {
         List<CountryResponse> resultCountries = [];
         IEnumerable<CountryRequest> countriesRequests =
@@ -82,10 +92,10 @@ public class CountriesServiceTests
 
         foreach (CountryRequest countryRequest in countriesRequests)
         {
-            resultCountries.Add(_service.AddCountryAsync(countryRequest)); // COLOMBIA BEING ADDED TWICE!
+            resultCountries.Add(await _service.AddCountryAsync(countryRequest)); // COLOMBIA BEING ADDED TWICE!
         }
 
-        IEnumerable<CountryResponse> actualCountries = _service.GetAllAsync();
+        IEnumerable<CountryResponse> actualCountries = await _service.GetAllAsync();
 
         foreach (CountryResponse expectedCountry in resultCountries)
         {
@@ -97,25 +107,25 @@ public class CountriesServiceTests
 
     #region Get
     [Fact]
-    public void Get_ReturnNull_IfIdIsNull()  
+    public async Task Get_ReturnNull_IfIdIsNull()
     {
         Guid? guid = null;
-        CountryResponse? countryResponse = _service.GetAsync(guid);
+        CountryResponse? countryResponse = await _service.GetAsync(guid);
         Assert.Null(countryResponse);
     }
 
     [Fact]
-    public void Get_ReturnCountry_IfIdIsValid()
+    public async Task Get_ReturnCountry_IfIdIsValid()
     {
         // Arrange
         CountryRequest request = new CountryRequest() { Name = "LONDON" };
-        CountryResponse response = _service.AddCountryAsync(request);
+        CountryResponse response = await _service.AddCountryAsync(request);
 
         // Act
-        CountryResponse? countryResponse = _service.GetAsync(response.Id);
+        CountryResponse? countryResponse = await _service.GetAsync(response.Id);
 
         // Assert
-        Assert.Equal(countryResponse, response);
+        Assert.Equal(response, countryResponse);
     }
     #endregion
 }

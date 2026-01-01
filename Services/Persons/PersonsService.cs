@@ -1,13 +1,18 @@
-﻿using Entities;
+﻿using CsvHelper;
+using Entities;
 using Entities.DataAccess;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using Services.Helpers;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Request;
 using ServicesContracts.DTO.Persons.Response;
 using ServicesContracts.Persons;
 using System.ComponentModel.DataAnnotations;
+using System.Drawing;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace Services.Persons;
@@ -55,29 +60,38 @@ public class PersonsService : IPersonsService
 
         return searchBy switch
         {
-            "Name" => await FilterGenericAsync(person => person.Name, name => name?.Contains(searchString) ?? true),
-            "Email" => await FilterGenericAsync(person => person.Email, email => email?.Contains(searchString) ?? true),
-            "DateOfBirth" => await FilterGenericAsync(person => person.DateOfBirth, date => date?.ToString("dd mm yyy").Contains(searchString) ?? true),
-            "Age" => await FilterGenericAsync(person => person.Age, age => age?.Equals(searchString) ?? true),
-            "Gender" => await FilterGenericAsync(person => person.Gender, gender => gender?.Equals(searchString) ?? true),
-            "Country" => await FilterGenericAsync(person => person.CountryName, country => country?.Equals(searchString) ?? true),
-            "Address" => await FilterGenericAsync(person => person.Address, address => address?.Contains(searchString) ?? true),
-            "ReceiveNewsLetters" => await FilterGenericAsync(person => person.ReceiveNewsLetter, receiveNews => receiveNews.Equals(searchString)),
+            "Name" => await _dbContext.Persons.Where(person => person.Name == null || person.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            "Email" => await _dbContext.Persons.Where(person => person.Email == null || person.Email.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            "DateOfBirth" => await _dbContext.Persons.Where(person => person.DateOfBirth == null || person.DateOfBirth.Value.ToString("yyyy-mm-ddd").Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            "Age" => await _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).Where(person => person.Age.Equals(searchString)).ToListAsync(),
+            "Gender" => await _dbContext.Persons.Where(person => person.Gender == null || person.Gender.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            "Country" => await _dbContext.Persons.Include(person => person.Country).Select(PersonResponseExtension.ToPersonResponse).Where(person => person.CountryName == null || person.CountryName.Equals(searchString)).ToListAsync(),
+            "Address" => await _dbContext.Persons.Where(person => person.Address == null || person.Address.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            "ReceiveNewsLetters" => await _dbContext.Persons.Where(person => person.ReceiveNewsLetter.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
             _ => await GetAllAsync()
         };
     }
-    public async Task<IEnumerable<PersonResponse>> OrderAsync(string sortBy, SortOrderOptions sortOptions)
+    private async Task<IEnumerable<PersonResponse>> OrderGenericAsync<T>(IEnumerable<PersonResponse> data, Func<PersonResponse, T> selector, SortOrderOptions sortOrderOptions)
+    {
+        return sortOrderOptions switch
+        {
+            SortOrderOptions.Descending => data.OrderByDescending(selector).ToList(),
+            SortOrderOptions.Ascending => data.OrderBy(selector).ToList(),
+            _ => await GetAllAsync()
+        };
+    }
+    public async Task<IEnumerable<PersonResponse>> OrderAsync(IEnumerable<PersonResponse> data, string sortBy, SortOrderOptions sortOptions)
     {
         return sortBy switch
         {
-            "Name" => await OrderGenericAsync(person => person.Name, sortOptions),
-            "Email" => await OrderGenericAsync(person => person.Email, sortOptions),
-            "DateOfBirth" => await OrderGenericAsync(person => person.DateOfBirth, sortOptions),
-            "Age" => await OrderGenericAsync(person => person.Age, sortOptions),
-            "Gender" => await OrderGenericAsync(person => person.Gender, sortOptions),
-            "Country" => await OrderGenericAsync(person => person.CountryName, sortOptions),
-            "Address" => await OrderGenericAsync(person => person.Address, sortOptions),
-            "ReceiveNewsLetters" => await OrderGenericAsync(person => person.ReceiveNewsLetter, sortOptions),
+            "Name" => await OrderGenericAsync(data, person => person.Name, sortOptions),
+            "Email" => await OrderGenericAsync(data, person => person.Email, sortOptions),
+            "DateOfBirth" => await OrderGenericAsync(data, person => person.DateOfBirth, sortOptions),
+            "Age" => await OrderGenericAsync(data, person => person.Age, sortOptions),
+            "Gender" => await OrderGenericAsync(data, person => person.Gender, sortOptions),
+            "Country" => await OrderGenericAsync(data, person => person.CountryName, sortOptions),
+            "Address" => await OrderGenericAsync(data, person => person.Address, sortOptions),
+            "ReceiveNewsLetters" => await OrderGenericAsync(data, person => person.ReceiveNewsLetter, sortOptions),
             _ => await GetAllAsync()
         };
     }
@@ -138,17 +152,54 @@ public class PersonsService : IPersonsService
         person.Name = personUpdateRequest.Name ?? person.Name;
         person.ReceiveNewsLetter = personUpdateRequest.ReceiveNewsLetter;
     }
-    private async Task<IEnumerable<PersonResponse>> OrderGenericAsync<T>(Func<PersonResponse, T> selector, SortOrderOptions sortOrderOptions)
+
+    public async Task<MemoryStream> GetPersonsCsvAsync()
     {
-        return sortOrderOptions switch
-        {
-            SortOrderOptions.Descending => _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).OrderByDescending(selector),
-            SortOrderOptions.Ascending => _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).OrderBy(selector),
-            _ => await GetAllAsync()
-        };
+        MemoryStream memoryStream = new MemoryStream();
+        StreamWriter streamWriter = new StreamWriter(memoryStream);
+        CsvWriter csvWriter = new CsvWriter(streamWriter, culture: CultureInfo.InvariantCulture, leaveOpen: true);
+        csvWriter.WriteHeader<PersonResponse>();
+
+        await csvWriter.NextRecordAsync();
+
+        IEnumerable<PersonResponse> persons = await GetAllAsync();
+        await csvWriter.WriteRecordsAsync<PersonResponse>(persons);
+        await csvWriter.FlushAsync();
+        memoryStream.Position = 0;
+        return memoryStream;
     }
-    private async Task<IEnumerable<PersonResponse>> FilterGenericAsync<T>(Func<PersonResponse, T> selector, Func<T, bool> predicate)
+
+    public async Task<MemoryStream> GetPersonsExcelAsync()
     {
-        return await _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).Where(person => predicate(selector(person))).ToListAsync();
+        MemoryStream memoryStream = new();
+        ExcelPackage.License.SetNonCommercialPersonal("Tenno641");
+        using ExcelPackage excelPackage = new ExcelPackage(memoryStream);
+
+        ExcelWorksheet sheet = excelPackage.Workbook.Worksheets.Add("Persons");
+
+        sheet.Cells["A1"].Value = "ID";
+        sheet.Cells["B1"].Value = "Name";
+        sheet.Cells["C1"].Value = "Email";
+        sheet.Cells["D1"].Value = "Date Of Birth";
+
+        using ExcelRange sheetHeaders = sheet.Cells["A1:D1"];
+        sheetHeaders.Style.Fill.SetBackground(Color.AntiqueWhite);
+        sheetHeaders.Style.Font.Bold = true;
+        sheetHeaders.Style.Fill.PatternType = ExcelFillStyle.DarkVertical;
+        int row = 2;
+        IEnumerable<PersonResponse> persons = await GetAllAsync();
+
+        foreach (PersonResponse person in persons)
+        {
+            sheet.Cells[row, 1].Value = person.Id;
+            sheet.Cells[row, 2].Value = person.Name;
+            sheet.Cells[row, 3].Value = person.Email;
+            sheet.Cells[row, 4].Value = person.DateOfBirth?.ToString("yyyy-mm-dd");
+            row++;
+        }
+        sheet.Cells["A1:D5"].AutoFitColumns();
+        await excelPackage.SaveAsync();
+        memoryStream.Position = 0;
+        return memoryStream;
     }
 }

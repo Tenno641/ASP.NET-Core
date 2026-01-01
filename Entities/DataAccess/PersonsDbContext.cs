@@ -5,8 +5,8 @@ namespace Entities.DataAccess;
 public class PersonsDbContext : DbContext
 {
     public PersonsDbContext(DbContextOptions<PersonsDbContext> dbContextOptions) : base(dbContextOptions) { }
-    public DbSet<Country> Countries { get; set; }
-    public DbSet<Person> Persons { get; set; }
+    public virtual DbSet<Country> Countries { get; set; }
+    public virtual DbSet<Person> Persons { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -16,14 +16,14 @@ public class PersonsDbContext : DbContext
 
         modelBuilder.Entity<Person>().ToTable("Persons");
 
-        foreach (Country country in GetCountriesListFromJson())
-        {
-            modelBuilder.Entity<Country>().HasData(country);
-        }
-        foreach (Person person in GetPersonsFromJson())
-        {
-            modelBuilder.Entity<Person>().HasData(person);
-        }
+        //foreach (Country country in GetCountriesListFromJson())
+        //{
+        //    modelBuilder.Entity<Country>().HasData(country);
+        //}
+        //foreach (Person person in GetPersonsFromJson())
+        //{
+        //    modelBuilder.Entity<Person>().HasData(person);
+        //}
         modelBuilder.Entity<Person>()
             .HasOne(person => person.Country)
             .WithMany(country => country.Persons)

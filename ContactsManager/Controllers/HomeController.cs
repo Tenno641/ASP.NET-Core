@@ -1,5 +1,4 @@
-﻿using Entities;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rotativaio.AspNetCore;
 using ServicesContracts.Countries;
@@ -30,10 +29,12 @@ public class HomeController : Controller
         ViewBag.CurrentSearchBy = searchBy;
         ViewBag.CurrentSearchString = searchString;
 
+        IEnumerable<PersonResponse> filteredPersons = await _personsService.FilterAsync(searchBy, searchString);
+
         ViewBag.CurrentSortBy = sortBy;
         ViewBag.CurrentSortOrder = sortOrder;
 
-        IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(sortBy, sortOrder);
+        IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(filteredPersons, sortBy, sortOrder);
 
         return View(sortedPersons);
     }
@@ -132,6 +133,19 @@ public class HomeController : Controller
         {
             PageOrientation = Orientation.Landscape
         };
+    }
+
+    [Route("PersonsCsv")]
+    public async Task<IActionResult> PersonsCsv()
+    {
+        MemoryStream memoryStream = await _personsService.GetPersonsCsvAsync();
+        return File(memoryStream, "text/csv");
+    }
+    [Route("PersonsExcel")]
+    public async Task<IActionResult> PersonsExcel()
+    {
+        MemoryStream stream = await _personsService.GetPersonsExcelAsync();
+        return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Persons.xlsx");
     }
     private async Task<IEnumerable<SelectListItem>> GetCountriesListItemsAsync()
     {

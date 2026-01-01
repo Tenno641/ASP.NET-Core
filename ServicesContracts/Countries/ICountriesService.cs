@@ -1,4 +1,5 @@
-﻿using ServicesContracts.DTO.Countries.Request;
+﻿using Microsoft.AspNetCore.Http;
+using ServicesContracts.DTO.Countries.Request;
 using ServicesContracts.DTO.Countries.Response;
 
 namespace ServicesContracts.Countries;
@@ -8,4 +9,5 @@ public interface ICountriesService
     Task<CountryResponse> AddCountryAsync(CountryRequest countryRequest);
     Task<IEnumerable<CountryResponse>> GetAllAsync();
     Task<CountryResponse?> GetAsync(Guid? id);
+    Task<int> ImportFromExcelFile(IFormFile file);
 }

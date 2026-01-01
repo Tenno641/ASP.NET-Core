@@ -33,7 +33,15 @@
 </form>
 
 <a asp-action="CreatePerson" asp-controller="Home" class="link-hover">Create Person</a>
-<a asp-action="PersonsPdf" asp-controller="Home" class="link-hover">Download as PDF</a>
+
+<a asp-action="PersonsPdf" asp-controller="Home" class="link-hover ml">Download as PDF</a>
+
+<a asp-action="PersonsCsv" asp-controller="Home" class="link-hover ml">Download as CSV</a>
+
+<a asp-action="PersonsExcel" asp-controller="Home" class="link-hover ml">Download as Excel</a>
+
+
+
 <h1>Persons</h1>
 <table class="table w-100 mt">
     <thead>

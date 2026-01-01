@@ -1,6 +1,8 @@
 ﻿using Entities;
 using Entities.DataAccess;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 using Services.Helpers;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Countries.Request;
@@ -32,7 +34,7 @@ public class CountriesService : ICountriesService
         Country country = countryRequest.ToCountry();
         country.Id = Guid.NewGuid();
 
-        if (await isDuplicated(country)) throw new ArgumentException("Country Already Exist.");
+        if (await isDuplicatedAsync(country)) throw new ArgumentException("Country Already Exist.");
 
         _dbContext.Countries.Add(country);
         await _dbContext.SaveChangesAsync();
@@ -58,9 +60,36 @@ public class CountriesService : ICountriesService
     }
     private static readonly Expression<Func<Country, CountryResponse>> ToResponseExpression =
     country => new CountryResponse { Id = country.Id, Name = country.Name };
-    private async Task<bool> isDuplicated(Country country)
+    private async Task<bool> isDuplicatedAsync(Country country)
     {
         string? trimmedName = country.Name?.Trim();
         return await _dbContext.Countries.AnyAsync(existingCountry => existingCountry.Name == trimmedName);
+    }
+
+    public async Task<int> ImportFromExcelFile(IFormFile file)
+    {
+        ExcelPackage.License.SetNonCommercialPersonal("Tenno641");
+
+        MemoryStream stream = new MemoryStream();
+        await file.CopyToAsync(stream);
+
+        using ExcelPackage excelPackage = new ExcelPackage(stream);
+
+        ExcelWorksheet sheet = excelPackage.Workbook.Worksheets["Countries"];
+
+        int rowsCount = sheet.Cells.Rows;
+        int affectedRows = 0;
+        for (int row = 2; row <= rowsCount; row++)
+        {
+            Country country = new Country() { Name = Convert.ToString(sheet.GetValue(row, 1)) };
+
+            if (string.IsNullOrWhiteSpace(country.Name)) continue;
+            if (await isDuplicatedAsync(country)) continue;
+
+            await _dbContext.Countries.AddAsync(country);
+            affectedRows++;
+        }
+        await _dbContext.SaveChangesAsync();
+        return affectedRows;
     }
 }

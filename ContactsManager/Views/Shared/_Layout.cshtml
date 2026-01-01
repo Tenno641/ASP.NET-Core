@@ -14,7 +14,8 @@
         <div class="navbar">
             <div class="navbar-brand"><h1>Contacts Manager<sub><small>v1.0</small></sub></h1></div>
             <ul>
-                <li><a href="/">Home</a></li>
+                <li><a asp-action="Index" asp-controller="Home">Home</a></li>
+                <li><a asp-action="ImportExcelFile" asp-controller="Countries">Upload Countries</a></li>
             </ul>
         </div>
         <div class="page-content">

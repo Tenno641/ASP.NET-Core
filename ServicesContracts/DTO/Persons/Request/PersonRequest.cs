@@ -1,36 +1,43 @@
 ﻿using Entities;
+using ServicesContracts.DTO.Persons;
 using System.ComponentModel.DataAnnotations;
 
-namespace ServicesContracts.DTO.Persons.Request;
-public record PersonRequest(
+public class PersonRequest
+{
     [Required]
-    string? Name,
+    public string? Name { get; set; }
+
     [Required]
     [EmailAddress]
     [DataType(DataType.EmailAddress)]
-    string? Email,
+    public string? Email { get; set; }
+
     [DataType(DataType.Date)]
-    DateTime? DateOfBirth,
+    public DateTime? DateOfBirth { get; set; }
+
     [Required]
-    GenderOptions? Gender,
+    public GenderOptions? Gender { get; set; }
+
     [Required]
-    Guid? CountryId,
+    public Guid? CountryId { get; set; }
+
     [Required]
-    string? Address,
-    bool ReceiveNewsLetter
-)
-{
+    public string? Address { get; set; }
+
+    public bool ReceiveNewsLetter { get; set; }
+
+    // Converts the request DTO into the domain/entity model
     public Person ToPerson()
     {
-        return new Person()
+        return new Person
         {
-            Name = Name,
-            Email = Email,
-            DateOfBirth = DateOfBirth,
-            Gender = Gender.ToString(),
-            CountryId = CountryId,
-            Address = Address,
-            ReceiveNewsLetter = ReceiveNewsLetter
+            Name = this.Name,
+            Email = this.Email,
+            DateOfBirth = this.DateOfBirth,
+            Gender = this.Gender.ToString(),
+            CountryId = this.CountryId,
+            Address = this.Address,
+            ReceiveNewsLetter = this.ReceiveNewsLetter
         };
     }
 }
