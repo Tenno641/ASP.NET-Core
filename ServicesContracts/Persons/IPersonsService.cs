@@ -1,5 +1,4 @@
-﻿using Entities;
-using ServicesContracts.DTO.Persons;
+﻿using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Request;
 using ServicesContracts.DTO.Persons.Response;
 
@@ -13,8 +12,6 @@ public interface IPersonsService
     Task<IEnumerable<PersonResponse>> OrderAsync(IEnumerable<PersonResponse> data, string sortBy, SortOrderOptions sortOptions);
     Task<PersonResponse> UpdateAsync(PersonUpdateRequest? personUpdateRequest);
     Task<bool> DeleteAsync(Guid? id);
-    IEnumerable<Person> GetAllPersonsStoredProcedure();
-    void InsertPersonStoredProcedure(Person person);
     Task<MemoryStream> GetPersonsCsvAsync();
     Task<MemoryStream> GetPersonsExcelAsync();
 }

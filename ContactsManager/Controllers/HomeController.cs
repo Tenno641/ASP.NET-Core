@@ -23,7 +23,7 @@ public class HomeController : Controller
     public async Task<IActionResult> Index(string searchBy, string searchString, string sortBy = nameof(PersonResponse.Name), SortOrderOptions sortOrder = SortOrderOptions.Ascending)
     {
         ViewBag.SearchOptions = new Dictionary<string, string>() {
-            { "Name", "Person Name"}, {"Email", "Email"}, {"DateOfBirth","Date Of Birth" }, {"Age", "Age"},{"Gender","Gender"}, {"Country", "Gender"},{"Address","Address"}, {"ReceiveNewsLetters", "Receive News Letters" }
+            { "Name", "Person Name"}, {"Email", "Email"}, {"DateOfBirth","Date Of Birth" }, {"Age", "Age"},{"Gender","Gender"}, {"CountryName", "Country"},{"Address","Address"}, {"ReceiveNewsLetters", "Receive News Letters" }
         };
 
         ViewBag.CurrentSearchBy = searchBy;

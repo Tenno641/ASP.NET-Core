@@ -4,11 +4,16 @@ using ServicesContracts.Countries;
 using ServicesContracts.Persons;
 using Entities.DataAccess;
 using Microsoft.EntityFrameworkCore;
-using Rotativaio.AspNetCore; 
+using Rotativaio.AspNetCore;
+using RepositoryContracts;
+using Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddValidation();
+
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
+builder.Services.AddScoped<IPersonsRepository, PersonsRepository>();
 
 builder.Services.AddScoped<ICountriesService, CountriesService>();
 builder.Services.AddScoped<IPersonsService, PersonsService>();

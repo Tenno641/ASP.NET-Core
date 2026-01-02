@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 namespace Entities.DataAccess;
@@ -32,6 +34,27 @@ public class PersonsDbContext : DbContext
         modelBuilder.Entity<Country>()
             .HasIndex(country => country.Name)
             .IsUnique();
+    }
+    public IEnumerable<Person> GetAllPersonsStoredProcedure()
+    {
+        FormattableString query = FormattableStringFactory.Create("EXECUTE [dbo].[PersonsGet]");
+        return Persons.FromSql(query);
+    }
+
+    public void InsertPersonStoredProcedure(Person person)
+    {
+        SqlParameter[] sqlParameters = new SqlParameter[]
+        {
+            new("@Id", person.Id),
+            new("@Name", person.Name),
+            new("@Email", person.Email),
+            new("@DateOfBirth", person.DateOfBirth),
+            new("@Gender", person.Gender),
+            new("@CountryId", person.CountryId),
+            new("@Address", person.Address),
+            new("@ReceiveNewsLetter", person.ReceiveNewsLetter)
+        };
+        Database.ExecuteSqlRaw("EXECUTE [dbo].[PersonInsert] @Id, @Name, @Email, @DateOfBirth, @Gender, @CountryId, @Address, @ReceiveNewsLetter", sqlParameters);
     }
 
     List<Person> GetPersonsFromJson()

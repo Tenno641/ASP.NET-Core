@@ -1,10 +1,10 @@
 ﻿using CsvHelper;
 using Entities;
 using Entities.DataAccess;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using RepositoryContracts;
 using Services.Helpers;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Request;
@@ -13,15 +13,17 @@ using ServicesContracts.Persons;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.CompilerServices;
+using System.Linq.Expressions;
 
 namespace Services.Persons;
 public class PersonsService : IPersonsService
 {
+    private readonly IPersonsRepository _repository;
     private readonly PersonsDbContext _dbContext;
-    public PersonsService(PersonsDbContext dbContext)
+    public PersonsService(IPersonsRepository repository, PersonsDbContext dbContext)
     {
         _dbContext = dbContext;
+        _repository = repository;
     }
     public async Task<PersonResponse> AddPersonAsync(PersonRequest? personRequest)
     {
@@ -33,8 +35,7 @@ public class PersonsService : IPersonsService
         Person person = personRequest.ToPerson();
         person.Id = Guid.NewGuid();
 
-        _dbContext.Persons.Add(person);
-        await _dbContext.SaveChangesAsync();
+        await _repository.AddPersonAsync(person);
         //InsertPersonStoredProcedure(person);
 
         return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
@@ -43,31 +44,39 @@ public class PersonsService : IPersonsService
     {
         if (id is null) return null;
 
-        return await _dbContext.Persons
-            .Include(person => person.Country)
-            .AsNoTracking()
-            .Where(person => person.Id == id)
-            .Select(PersonResponseExtension.ToPersonResponse)
-            .FirstOrDefaultAsync();
+        Person? person = await _repository.GetAsync(id.Value);
+        if (person is null) return null;
+
+        return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
     }
     public async Task<IEnumerable<PersonResponse>> GetAllAsync()
     {
-        return await _dbContext.Persons.Include(person => person.Country).Select(PersonResponseExtension.ToPersonResponse).ToListAsync();
+        return await _repository.All().Select(PersonResponseExtension.ToPersonResponse).ToListAsync();
     }
     public async Task<IEnumerable<PersonResponse>> FilterAsync(string searchBy, string? searchString)
     {
         if (searchString is null) return await GetAllAsync();
+        if (!int.TryParse(searchString, out var age))
+            return await GetAllAsync(); 
 
         return searchBy switch
         {
-            "Name" => await _dbContext.Persons.Where(person => person.Name == null || person.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
-            "Email" => await _dbContext.Persons.Where(person => person.Email == null || person.Email.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
-            "DateOfBirth" => await _dbContext.Persons.Where(person => person.DateOfBirth == null || person.DateOfBirth.Value.ToString("yyyy-mm-ddd").Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
-            "Age" => await _dbContext.Persons.Select(PersonResponseExtension.ToPersonResponse).Where(person => person.Age.Equals(searchString)).ToListAsync(),
-            "Gender" => await _dbContext.Persons.Where(person => person.Gender == null || person.Gender.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
-            "Country" => await _dbContext.Persons.Include(person => person.Country).Select(PersonResponseExtension.ToPersonResponse).Where(person => person.CountryName == null || person.CountryName.Equals(searchString)).ToListAsync(),
-            "Address" => await _dbContext.Persons.Where(person => person.Address == null || person.Address.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
-            "ReceiveNewsLetters" => await _dbContext.Persons.Where(person => person.ReceiveNewsLetter.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.Name) => await _repository.FilterAsync(person => person.Name == null || person.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.Email) => await _repository.FilterAsync(person => person.Email == null || person.Email.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.DateOfBirth) => await _repository.FilterAsync(person => person.DateOfBirth == null || person.DateOfBirth.Value.ToString("yyyy-mm-ddd").Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.Gender) => await _repository.FilterAsync(person => person.Gender == null || person.Gender.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.CountryName) => await _repository.FilterAsync(person => person.Country == null || person.Country.Name == null || person.Country.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.Address) => await _repository.FilterAsync(person => person.Address == null || person.Address.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.ReceiveNewsLetter) => await _repository.FilterAsync(person => person.ReceiveNewsLetter.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+
+            nameof(PersonResponse.Age) => await _repository.FilterAsync(person => person.DateOfBirth == null || EF.Functions.DateDiffYear(person.DateOfBirth.Value, DateTime.UtcNow) == age).Select(PersonResponseExtension.ToPersonResponse).Where(personResponse => personResponse.Age == age).ToListAsync(),
+
             _ => await GetAllAsync()
         };
     }
@@ -103,55 +112,25 @@ public class PersonsService : IPersonsService
 
         if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.errors.Select(error => error.ErrorMessage)));
 
-        Person? person = _dbContext.Persons.FirstOrDefault(person => person.Id == personUpdateRequest.Id);
+        Person? person = await _repository.GetAsync(personUpdateRequest.Id);
 
         if (person is null) throw new ArgumentException("Not Found Person");
 
-        UpdatePerson(personUpdateRequest, person);
-        await _dbContext.SaveChangesAsync();
+        await _repository.UpdateAsync(personUpdateRequest.ToPerson());
 
         return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
     }
+
     public async Task<bool> DeleteAsync(Guid? id)
     {
         ArgumentNullException.ThrowIfNull(id);
 
-        Person? person = await _dbContext.Persons.FirstOrDefaultAsync(person => person.Id == id);
+        Person? person = await _repository.GetAsync(id.Value);
         if (person is null) return false;
 
-        _dbContext.Remove(person);
-        return await _dbContext.SaveChangesAsync() > 0;
+        return await _repository.RemoveAsync(id.Value);
     }
-    public IEnumerable<Person> GetAllPersonsStoredProcedure()
-    {
-        FormattableString query = FormattableStringFactory.Create("EXECUTE [dbo].[PersonsGet]");
-        return _dbContext.Persons.FromSql(query);
-    }
-    public void InsertPersonStoredProcedure(Person person)
-    {
-        SqlParameter[] sqlParameters = new SqlParameter[]
-        {
-            new("@Id", person.Id),
-            new("@Name", person.Name),
-            new("@Email", person.Email),
-            new("@DateOfBirth", person.DateOfBirth),
-            new("@Gender", person.Gender),
-            new("@CountryId", person.CountryId),
-            new("@Address", person.Address),
-            new("@ReceiveNewsLetter", person.ReceiveNewsLetter)
-        };
-        _dbContext.Database.ExecuteSqlRaw("EXECUTE [dbo].[PersonInsert] @Id, @Name, @Email, @DateOfBirth, @Gender, @CountryId, @Address, @ReceiveNewsLetter", sqlParameters);
-    }
-    private static void UpdatePerson(PersonUpdateRequest personUpdateRequest, Person person)
-    {
-        person.Address = personUpdateRequest.Address ?? person.Address;
-        person.CountryId = personUpdateRequest.CountryId ?? person.CountryId;
-        person.DateOfBirth = personUpdateRequest.DateOfBirth ?? person.DateOfBirth;
-        person.Email = personUpdateRequest.Email ?? person.Email;
-        person.Gender = personUpdateRequest.Gender.ToString() ?? person.Gender;
-        person.Name = personUpdateRequest.Name ?? person.Name;
-        person.ReceiveNewsLetter = personUpdateRequest.ReceiveNewsLetter;
-    }
+
 
     public async Task<MemoryStream> GetPersonsCsvAsync()
     {

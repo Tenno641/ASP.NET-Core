@@ -3,6 +3,7 @@ using Entities.DataAccess;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using RepositoryContracts;
 using Services.Helpers;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Countries.Request;
@@ -14,10 +15,10 @@ namespace Services.Countries;
 
 public class CountriesService : ICountriesService
 {
-    private readonly PersonsDbContext _dbContext;
-    public CountriesService(PersonsDbContext dbContext)
+    private readonly ICountriesRepository _repository;
+    public CountriesService(ICountriesRepository repository)
     {
-        _dbContext = dbContext;
+        _repository = repository;
     }
     public async Task<CountryResponse> AddCountryAsync(CountryRequest? countryRequest)
     {
@@ -36,39 +37,34 @@ public class CountriesService : ICountriesService
 
         if (await isDuplicatedAsync(country)) throw new ArgumentException("Country Already Exist.");
 
-        _dbContext.Countries.Add(country);
-        await _dbContext.SaveChangesAsync();
+        await _repository.Add(country);
 
         return country.ToCountryResponse();
     }
     public async Task<IEnumerable<CountryResponse>> GetAllAsync()
     {
-        return await _dbContext.Countries
-            .AsNoTracking()
-            .Select(ToResponseExpression)
-            .ToListAsync();
+        return await _repository.All().Select(ToCountryResponseExpression).ToListAsync();
     }
     public async Task<CountryResponse?> GetAsync(Guid? id)
     {
         if (id is null) return null;
 
-        return await _dbContext.Countries
-           .AsNoTracking()
-           .Where(country => country.Id == id)
-           .Select(ToResponseExpression)
-           .FirstOrDefaultAsync();
+        Country? country = await _repository.GetAsync(id.Value);
+        if (country is null) return null;
+
+        return country.ToCountryResponse();
     }
-    private static readonly Expression<Func<Country, CountryResponse>> ToResponseExpression =
+    private static readonly Expression<Func<Country, CountryResponse>> ToCountryResponseExpression =
     country => new CountryResponse { Id = country.Id, Name = country.Name };
     private async Task<bool> isDuplicatedAsync(Country country)
     {
-        string? trimmedName = country.Name?.Trim();
-        return await _dbContext.Countries.AnyAsync(existingCountry => existingCountry.Name == trimmedName);
+        return await _repository.GetAsync(country.Id) != null;
     }
 
     public async Task<int> ImportFromExcelFile(IFormFile file)
     {
         ExcelPackage.License.SetNonCommercialPersonal("Tenno641");
+        List<Country> newCountries = new List<Country>();
 
         MemoryStream stream = new MemoryStream();
         await file.CopyToAsync(stream);
@@ -86,10 +82,10 @@ public class CountriesService : ICountriesService
             if (string.IsNullOrWhiteSpace(country.Name)) continue;
             if (await isDuplicatedAsync(country)) continue;
 
-            await _dbContext.Countries.AddAsync(country);
+            newCountries.Add(country);
             affectedRows++;
         }
-        await _dbContext.SaveChangesAsync();
+        await _repository.AddRange(newCountries);
         return affectedRows;
     }
 }
