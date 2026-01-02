@@ -7,16 +7,13 @@ using ServicesContracts.DTO.Countries.Response;
 
 namespace ContactsManager.Tests;
 
-public class CountriesServiceTests
+public class CountriesServiceTests : IClassFixture<DbContextFixture>
 {
     private readonly CountriesService _service;
-    public CountriesServiceTests()
+    public CountriesServiceTests(DbContextFixture dbContextFixture)
     {
-        var connection = new SqliteConnection("DataSource=:memory:");
-        connection.Open();
-
         var options = new DbContextOptionsBuilder<PersonsDbContext>()
-            .UseSqlite(connection)
+            .UseSqlite(dbContextFixture.Connection)
             .Options;
 
         var context = new PersonsDbContext(options);
@@ -86,7 +83,7 @@ public class CountriesServiceTests
         IEnumerable<CountryRequest> countriesRequests =
             [
                 new CountryRequest(){Name = "COLOMBIA"},
-                new CountryRequest(){Name = "LONDON"},
+                new CountryRequest(){Name = "SWEDEN"},
                 new CountryRequest(){Name = "GERMANY"}
             ];
 

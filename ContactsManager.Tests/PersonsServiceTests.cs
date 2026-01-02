@@ -3,19 +3,24 @@ using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Response;
 using ServicesContracts.DTO.Countries.Response;
 using ServicesContracts.DTO.Countries.Request;
-using Moq;
 using Microsoft.EntityFrameworkCore;
 using Entities.DataAccess;
 using Services.Countries;
 using Microsoft.Data.Sqlite;
+using FluentAssertions;
+using AutoFixture;
+using ContactsManager.Tests;
 
-public class PersonsServiceTests
+public class PersonsServiceTests : IClassFixture<DbContextFixture>
 {
     private readonly PersonsService _service;
+    private readonly IFixture _fixture;
     private readonly CountriesService _countriesService;
     public PersonsServiceTests()
     {
-        var connection = new SqliteConnection("DataSource=:memory:");
+        _fixture = new Fixture();
+
+        SqliteConnection connection = new SqliteConnection("DataSource=:memory:");
         connection.Open();
 
         var options = new DbContextOptionsBuilder<PersonsDbContext>()
@@ -34,37 +39,42 @@ public class PersonsServiceTests
     public async Task AddPerson_ThrowsArgumentNull_ArgumentIsNull()
     {
         PersonRequest? request = null;
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _service.AddPersonAsync(request));
+        Func<Task> action = () => _service.AddPersonAsync(request);
+        await action.Should().ThrowAsync<ArgumentNullException>();
     }
 
     [Fact]
     public async Task AddPerson_ThrowsArgumentException_IfPropertyIsNull()
     {
         // Arrange
-        CountryRequest countryRequest = new CountryRequest() { Name = "London" };
-        CountryResponse countryResponse = await _countriesService.AddCountryAsync(countryRequest);
-        PersonRequest request = new();
+        PersonRequest personRequest = new();
+
+        // Act
+        Func<Task> action = () => _service.AddPersonAsync(personRequest); 
 
         // Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
-        {
-            await _service.AddPersonAsync(request);
-        });
+        await action.Should().ThrowAsync<ArgumentException>();
     }
 
     [Fact]
     public async Task AddPerson_PersonAdded_IfPersonIsValid()
     {
         // Arrange
-        PersonRequest request = await CreatePersonAsync("London");
-        
+        CountryRequest countryRequest = _fixture.Create<CountryRequest>();
+        CountryResponse countryResponse = await _countriesService.AddCountryAsync(countryRequest);
+
+        PersonRequest personRequest = _fixture.Build<PersonRequest>()
+            .With(person => person.CountryId, countryResponse.Id)
+            .With(person => person.Email, "Example@Example.com")
+            .Create();
+
         // Act
-        PersonResponse response = await _service.AddPersonAsync(request);
+        PersonResponse response = await _service.AddPersonAsync(personRequest);
         IEnumerable<PersonResponse> responses = await _service.GetAllAsync();
 
         // Assert
-        Assert.True(response.Id != Guid.Empty);
-        Assert.Contains(response, responses);
+        response.Id.Should().NotBe(Guid.Empty);
+        responses.Should().Contain(response);
     }
     #endregion
 
@@ -125,7 +135,7 @@ public class PersonsServiceTests
 
         IEnumerable<PersonRequest> personRequests =
             [
-                await CreatePersonAsync("London"),
+                await CreatePersonAsync("COLOMBIA"),
                 await CreatePersonAsync("USA")
             ];
 
@@ -151,8 +161,8 @@ public class PersonsServiceTests
         // Arrange
         IEnumerable<PersonRequest> personRequests =
             [
-                await CreatePersonAsync("London"),
-                await CreatePersonAsync("USA")
+                await CreatePersonAsync("SWEDEN"),
+                await CreatePersonAsync("CHINA")
             ];
 
         // Act
