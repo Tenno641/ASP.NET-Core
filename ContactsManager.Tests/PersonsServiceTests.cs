@@ -1,23 +1,21 @@
 ﻿using AutoFixture;
-using Azure;
-using ContactsManager.Tests;
+using ServicesContracts.DTO.Persons;
 using Entities;
 using FluentAssertions;
 using Moq;
 using RepositoryContracts;
-using Services.Countries;
 using Services.Persons;
 using ServicesContracts.DTO.Persons.Response;
 using System.Linq.Expressions;
 using Xunit.Abstractions;
 
-public class PersonsServiceTests : IClassFixture<DbContextFixture>
+namespace ContactsManager.Tests;
+
+public class PersonsServiceTests
 {
     private readonly PersonsService _personsService;
-    private readonly CountriesService _countriesService;
     private readonly Fixture _fixture;
     private readonly Mock<IPersonsRepository> _personsRepositoryMock;
-    private readonly Mock<ICountriesRepository> _countriesRepositoryMock;
     private readonly ITestOutputHelper _testOutput;
     public PersonsServiceTests(ITestOutputHelper testOutput)
     {
@@ -25,10 +23,8 @@ public class PersonsServiceTests : IClassFixture<DbContextFixture>
         _fixture = new Fixture();
 
         _personsRepositoryMock = new Mock<IPersonsRepository>();
-        _countriesRepositoryMock = new Mock<ICountriesRepository>();
 
         _personsService = new PersonsService(_personsRepositoryMock.Object);
-        _countriesService = new CountriesService(_countriesRepositoryMock.Object);
     }
 
     #region Add Person
@@ -95,24 +91,18 @@ public class PersonsServiceTests : IClassFixture<DbContextFixture>
     public async Task Get_ValidPersonResponseObject_ProvidingValidId()
     {
         // Arrange
-        PersonRequest personRequest = _fixture.Build<PersonRequest>().With(person => person.Email, "example@example.com").Create();
-        Person person = personRequest.ToPerson();
-
-        _personsRepositoryMock
-            .Setup(repo => repo.AddPersonAsync(It.IsAny<Person>()))
-            .ReturnsAsync(person);
+        Person person = _fixture.Build<Person>().With(person => person.Country, null as Country).Create();
 
         _personsRepositoryMock
             .Setup(repo => repo.GetAsync(It.IsAny<Guid>()))
             .ReturnsAsync(person);
 
         // Act
-        PersonResponse personResponse = await _personsService.AddPersonAsync(personRequest);
-        PersonResponse? filteredPerson = await _personsService.GetAsync(personResponse.Id);
-        PersonResponse expected = filteredPerson.Value with { Id = personResponse.Id };
+        PersonResponse? actualResponse = await _personsService.GetAsync(person.Id);
+        PersonResponse expected = PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
 
         // Assert
-        expected.Should().Be(personResponse);
+        actualResponse.Should().Be(expected);
     }
     #endregion
 
@@ -133,23 +123,18 @@ public class PersonsServiceTests : IClassFixture<DbContextFixture>
     public async Task GetAll_ReturnPersons_IfWeAddedValidPersons()
     {
         // Arrange
-        IEnumerable<PersonRequest> personRequests = _fixture.CreateMany<PersonRequest>();
-        IEnumerable<Person> persons = personRequests.Select(person => person.ToPerson());
-
-        _personsRepositoryMock
-            .Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Person>>()))
-            .ReturnsAsync(persons);
+        IEnumerable<Person> persons = _fixture.Build<Person>().With(person => person.Country, null as Country).CreateMany();
 
         _personsRepositoryMock
             .Setup(repo => repo.AllAsync())
             .ReturnsAsync(persons);
 
         // Act
-        IEnumerable<PersonResponse> personResponses = await _personsService.AddRangeAsync(personRequests);
         IEnumerable<PersonResponse> actualPersonResponses = await _personsService.GetAllAsync();
+        IEnumerable<PersonResponse> expectedPersonResponses = persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
 
         // Assert
-        actualPersonResponses.Should().BeEquivalentTo(personResponses);
+        actualPersonResponses.Should().BeEquivalentTo(expectedPersonResponses);
     }
 
     #endregion
@@ -159,36 +144,57 @@ public class PersonsServiceTests : IClassFixture<DbContextFixture>
     public async Task Filter_GetFilteredPersons()
     {
         // Arrange
-        IEnumerable<PersonRequest> personRequests =
+        IEnumerable<Person> persons =
             [
-                _fixture.Build<PersonRequest>().With(person => person.Name, "Mamdani").Create(),
-                _fixture.Build<PersonRequest>().With(person => person.Name, "Rufus").Create(),
-                _fixture.Build<PersonRequest>().With(person => person.Name, "motor").Create(),
-            ];
-        IEnumerable<Person> persons = personRequests.Where(person => person.Name == null || person.Name.Contains('m')).Select(person => person.ToPerson());
+                _fixture.Build<Person>().With(person => person.Name, "Mamdani").With(person => person.Country, null as Country).Create(),
+            _fixture.Build<Person>().With(person => person.Name, "Rufus").With(person => person.Country, null as Country).Create(),
+            _fixture.Build<Person>().With(person => person.Name, "motor").With(person => person.Country, null as Country).Create(),
+        ];
 
         _personsRepositoryMock
             .Setup(repo => repo.FilterAsync(It.IsAny<Expression<Func<Person, bool>>>()))
-            .ReturnsAsync(persons);
+            .ReturnsAsync(persons.Where(person => person.Name == null || person.Name.Contains('m')));
 
-        _personsRepositoryMock
-            .Setup(repo => repo.AddRangeAsync(It.IsAny<IEnumerable<Person>>()))
-            .ReturnsAsync(persons);
+        // Act
+        IEnumerable<PersonResponse> actualResponses = await _personsService.FilterAsync("Name", "m");
+
+        IEnumerable<PersonResponse> expectedResponses = persons.Where(person => person.Name == null || person.Name.Contains('m')).Select(PersonResponseExtension.ToPersonResponse.Compile());
+
+        _testOutput.WriteLine("actual:");
+        _testOutput.WriteLine(string.Join("\n", actualResponses));
+        _testOutput.WriteLine("Expected");
+        _testOutput.WriteLine(string.Join("\n", expectedResponses));
+
+        // Assert
+        actualResponses.Should().BeEquivalentTo(expectedResponses);
+    }
+    #endregion
+
+    #region Order
+    [Fact]
+    public async Task OrderBy_ReturnsSortedPersonsList()
+    {
+        // Arrange
+        IEnumerable<Person> persons = _fixture.Build<Person>()
+            .With(person => person.Country, null as Country)
+            .CreateMany();
 
         _personsRepositoryMock
             .Setup(repo => repo.AllAsync())
             .ReturnsAsync(persons);
 
-        IEnumerable<PersonResponse> responses = await _personsService.AddRangeAsync(personRequests);
-
         // Act
-        IEnumerable<PersonResponse> expectedResponses = await _personsService.FilterAsync("Name", "m");
-        IEnumerable<PersonResponse> actualResponses = persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
+        IEnumerable<PersonResponse> expectedPersons = persons.OrderBy(person => person.Name).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
 
-        _testOutput.WriteLine(string.Join("\n", expectedResponses));
+        IEnumerable<PersonResponse> actualPersons = await _personsService.OrderAsync(persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)), nameof(PersonResponse.Name), SortOrderOptions.Ascending);
+
+        _testOutput.WriteLine("actual:");
+        _testOutput.WriteLine(string.Join("\n", actualPersons));
+        _testOutput.WriteLine("Expected");
+        _testOutput.WriteLine(string.Join("\n", expectedPersons));
 
         // Assert
-        actualResponses.Should().BeEquivalentTo(expectedResponses);
+        actualPersons.Should().BeEquivalentTo(expectedPersons);
     }
     #endregion
 }
