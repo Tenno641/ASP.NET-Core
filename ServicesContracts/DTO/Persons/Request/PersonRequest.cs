@@ -26,7 +26,6 @@ public class PersonRequest
 
     public bool ReceiveNewsLetter { get; set; }
 
-    // Converts the request DTO into the domain/entity model
     public Person ToPerson()
     {
         return new Person

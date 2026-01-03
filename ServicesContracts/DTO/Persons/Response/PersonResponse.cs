@@ -1,5 +1,4 @@
 ﻿using Entities;
-using Microsoft.EntityFrameworkCore;
 using ServicesContracts.DTO.Persons.Request;
 using System.Linq.Expressions;
 
@@ -30,7 +29,7 @@ public static class PersonResponseExtension
         CountryId = person.CountryId,
         Address = person.Address,
         ReceiveNewsLetter = person.ReceiveNewsLetter,
-        Age = EF.Functions.DateDiffYear(person.DateOfBirth, DateTime.UtcNow),
+        Age = CalculateAge(person.DateOfBirth), 
         CountryName = person.Country != null ? person.Country.Name : null
     };
 
@@ -47,5 +46,21 @@ public static class PersonResponseExtension
             Name = personResponse.Name,
             ReceiveNewsLetter = personResponse.ReceiveNewsLetter
         };
+    }
+
+    private static int? CalculateAge(DateTime? dateOfBirth)
+    {
+        if (dateOfBirth is null) return null;
+
+        DateTime today = DateTime.UtcNow;
+
+        int age = today.Year - dateOfBirth.Value.Year;
+
+        if (dateOfBirth.Value.AddYears(age) > today)
+        {
+            age--;
+        }
+
+        return age;
     }
 }

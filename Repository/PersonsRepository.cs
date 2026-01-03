@@ -20,11 +20,12 @@ public class PersonsRepository : IPersonsRepository
         return person;
     }
 
-    public IQueryable<Person> All()
+    public async Task<IEnumerable<Person>> AllAsync()
     {
-        return _dbContext.Persons
+        return await _dbContext.Persons
             .AsNoTracking()
-            .Include(person => person.Country);
+            .Include(person => person.Country)
+            .ToListAsync();
     }
 
     public async Task<bool> RemoveAsync(Guid id)
@@ -37,11 +38,12 @@ public class PersonsRepository : IPersonsRepository
         return true;
     }
 
-    public IQueryable<Person> FilterAsync(Expression<Func<Person, bool>> predicate)
+    public async Task<IEnumerable<Person>> FilterAsync(Expression<Func<Person, bool>> predicate)
     {
-        return _dbContext.Persons
+        return await _dbContext.Persons
             .AsNoTracking()
-            .Where(predicate);
+            .Where(predicate)
+            .ToListAsync();
     }
 
     public async Task<Person?> GetAsync(Guid id)
@@ -69,5 +71,12 @@ public class PersonsRepository : IPersonsRepository
 
         await _dbContext.SaveChangesAsync();
         return existingPerson;
+    }
+
+    public async Task<IEnumerable<Person>> AddRangeAsync(IEnumerable<Person> persons)
+    {
+        _dbContext.Persons.AddRange(persons);
+        await _dbContext.SaveChangesAsync();
+        return persons;
     }
 }

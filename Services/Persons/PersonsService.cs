@@ -1,6 +1,5 @@
 ﻿using CsvHelper;
 using Entities;
-using Entities.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
@@ -13,16 +12,13 @@ using ServicesContracts.Persons;
 using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Globalization;
-using System.Linq.Expressions;
 
 namespace Services.Persons;
 public class PersonsService : IPersonsService
 {
     private readonly IPersonsRepository _repository;
-    private readonly PersonsDbContext _dbContext;
-    public PersonsService(IPersonsRepository repository, PersonsDbContext dbContext)
+    public PersonsService(IPersonsRepository repository)
     {
-        _dbContext = dbContext;
         _repository = repository;
     }
     public async Task<PersonResponse> AddPersonAsync(PersonRequest? personRequest)
@@ -51,7 +47,7 @@ public class PersonsService : IPersonsService
     }
     public async Task<IEnumerable<PersonResponse>> GetAllAsync()
     {
-        return await _repository.All().Select(PersonResponseExtension.ToPersonResponse).ToListAsync();
+        return (await _repository.AllAsync()).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList();
     }
     public async Task<IEnumerable<PersonResponse>> FilterAsync(string searchBy, string? searchString)
     {
@@ -61,22 +57,21 @@ public class PersonsService : IPersonsService
 
         return searchBy switch
         {
-            nameof(PersonResponse.Name) => await _repository.FilterAsync(person => person.Name == null || person.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.Name) => (await _repository.FilterAsync(person => person.Name == null || person.Name.Contains(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.Email) => await _repository.FilterAsync(person => person.Email == null || person.Email.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.Email) => (await _repository.FilterAsync(person => person.Email == null || person.Email.Contains(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.DateOfBirth) => await _repository.FilterAsync(person => person.DateOfBirth == null || person.DateOfBirth.Value.ToString("yyyy-mm-ddd").Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.DateOfBirth) => (await _repository.FilterAsync(person => person.DateOfBirth == null || person.DateOfBirth.Value.ToString("yyyy-mm-ddd").Contains(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.Gender) => await _repository.FilterAsync(person => person.Gender == null || person.Gender.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.Gender) => (await _repository.FilterAsync(person => person.Gender == null || person.Gender.Equals(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.CountryName) => await _repository.FilterAsync(person => person.Country == null || person.Country.Name == null || person.Country.Name.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.CountryName) => (await _repository.FilterAsync(person => person.Country == null || person.Country.Name == null || person.Country.Name.Contains(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.Address) => await _repository.FilterAsync(person => person.Address == null || person.Address.Contains(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.Address) => (await _repository.FilterAsync(person => person.Address == null || person.Address.Contains(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.ReceiveNewsLetter) => await _repository.FilterAsync(person => person.ReceiveNewsLetter.Equals(searchString)).Select(PersonResponseExtension.ToPersonResponse).ToListAsync(),
+            nameof(PersonResponse.ReceiveNewsLetter) => (await _repository.FilterAsync(person => person.ReceiveNewsLetter.Equals(searchString))).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).ToList(),
 
-            nameof(PersonResponse.Age) => await _repository.FilterAsync(person => person.DateOfBirth == null || EF.Functions.DateDiffYear(person.DateOfBirth.Value, DateTime.UtcNow) == age).Select(PersonResponseExtension.ToPersonResponse).Where(personResponse => personResponse.Age == age).ToListAsync(),
-
+            nameof(PersonResponse.Age) => (await _repository.AllAsync()).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)).Where(person => person.Age == age).ToList(),
             _ => await GetAllAsync()
         };
     }
@@ -180,5 +175,12 @@ public class PersonsService : IPersonsService
         await excelPackage.SaveAsync();
         memoryStream.Position = 0;
         return memoryStream;
+    }
+
+    public async Task<IEnumerable<PersonResponse>> AddRangeAsync(IEnumerable<PersonRequest> persons)
+    {
+        IEnumerable<Person> requests = persons.Select(person => person.ToPerson());
+        IEnumerable<Person> responses = await _repository.AddRangeAsync(requests);
+        return responses.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
     }
 }

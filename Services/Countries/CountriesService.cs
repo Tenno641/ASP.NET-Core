@@ -37,13 +37,13 @@ public class CountriesService : ICountriesService
 
         if (await isDuplicatedAsync(country)) throw new ArgumentException("Country Already Exist.");
 
-        await _repository.Add(country);
+        await _repository.AddAsync(country);
 
         return country.ToCountryResponse();
     }
     public async Task<IEnumerable<CountryResponse>> GetAllAsync()
     {
-        return await _repository.All().Select(ToCountryResponseExpression).ToListAsync();
+        return (await _repository.AllAsync()).Select(country => country.ToCountryResponse()).ToList();
     }
     public async Task<CountryResponse?> GetAsync(Guid? id)
     {
@@ -85,7 +85,7 @@ public class CountriesService : ICountriesService
             newCountries.Add(country);
             affectedRows++;
         }
-        await _repository.AddRange(newCountries);
+        await _repository.AddRangeAsync(newCountries);
         return affectedRows;
     }
 }

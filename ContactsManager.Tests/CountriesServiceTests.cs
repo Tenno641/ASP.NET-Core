@@ -19,7 +19,7 @@ public class CountriesServiceTests : IClassFixture<DbContextFixture>
         var context = new PersonsDbContext(options);
         context.Database.EnsureCreated();
 
-        _service = new CountriesService(context);
+        _service = new CountriesService(null);
     }
 
     #region AddCountryTests

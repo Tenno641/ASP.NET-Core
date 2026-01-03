@@ -12,24 +12,25 @@ public class CountriesRepository : ICountriesRepository
     {
         _dbContext = dbContext;
     }
-    public async Task<Country> Add(Country country)
+    public async Task<Country> AddAsync(Country country)
     {
         _dbContext.Countries.Add(country);
         await _dbContext.SaveChangesAsync();
         return country;
     }
 
-    public async Task<IEnumerable<Country>> AddRange(IEnumerable<Country> countries)
+    public async Task<IEnumerable<Country>> AddRangeAsync(IEnumerable<Country> countries)
     {
         _dbContext.Countries.AddRange(countries);
         await _dbContext.SaveChangesAsync();
         return countries;
     }
 
-    public IQueryable<Country> All()
+    public async Task<IEnumerable<Country>> AllAsync()
     {
-        return _dbContext.Countries
-            .AsNoTracking();
+        return await _dbContext.Countries
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<Country?> GetAsync(Guid id)

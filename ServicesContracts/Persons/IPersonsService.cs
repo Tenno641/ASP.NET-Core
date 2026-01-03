@@ -6,6 +6,7 @@ namespace ServicesContracts.Persons;
 public interface IPersonsService
 {
     Task<PersonResponse> AddPersonAsync(PersonRequest? personRequest);
+    Task<IEnumerable<PersonResponse>> AddRangeAsync(IEnumerable<PersonRequest> persons);
     Task<PersonResponse?> GetAsync(Guid? id);
     Task<IEnumerable<PersonResponse>> GetAllAsync();
     Task<IEnumerable<PersonResponse>> FilterAsync(string searchBy, string? searchString);

@@ -6,9 +6,10 @@ namespace RepositoryContracts;
 public interface IPersonsRepository
 {
     Task<Person> AddPersonAsync(Person person);
+    Task<IEnumerable<Person>> AddRangeAsync(IEnumerable<Person> persons);
     Task<Person?> GetAsync(Guid id);
-    IQueryable<Person> All();
+    Task<IEnumerable<Person>> AllAsync();
     Task<Person> UpdateAsync(Person person);
-    IQueryable<Person> FilterAsync(Expression<Func<Person, bool>> predicate);
+    Task<IEnumerable<Person>> FilterAsync(Expression<Func<Person, bool>> predicate);
     Task<bool> RemoveAsync(Guid id);
 }
