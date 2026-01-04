@@ -1,6 +1,7 @@
 ﻿using CsvHelper;
 using Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using RepositoryContracts;
@@ -51,8 +52,9 @@ public class PersonsService : IPersonsService
     }
     public async Task<IEnumerable<PersonResponse>> FilterAsync(string searchBy, string? searchString)
     {
+        int age = 0;
         if (searchString is null) return await GetAllAsync();
-        if (!int.TryParse(searchString, out var age))
+        if (searchBy.Equals(nameof(PersonResponse.Age)) && !int.TryParse(searchString, out age))
             return await GetAllAsync(); 
 
         return searchBy switch
