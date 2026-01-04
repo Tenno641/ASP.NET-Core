@@ -17,13 +17,16 @@ builder.Services.AddScoped<IPersonsRepository, PersonsRepository>();
 
 builder.Services.AddScoped<ICountriesService, CountriesService>();
 builder.Services.AddScoped<IPersonsService, PersonsService>();
-
 builder.Services.AddDbContext<PersonsDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
 });
 
-builder.Services.AddRotativaIo("https://api.rotativa.io", builder.Configuration["rotativaApiKey"] ?? throw new InvalidOperationException("RotativaApiKey is missing"));
+if (!builder.Environment.IsEnvironment("IntegrationTesting"))
+{
+    builder.Services.AddRotativaIo("https://api.rotativa.io", builder.Configuration["rotativaApiKey"] ?? throw new InvalidOperationException("RotativaApiKey is missing"));
+}
+
 var app = builder.Build();
 
 app.UseStaticFiles();

@@ -1,6 +1,7 @@
 ﻿using Entities.DataAccess;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Repository;
 using Services.Countries;
 using ServicesContracts.DTO.Countries.Request;
 using ServicesContracts.DTO.Countries.Response;
@@ -19,7 +20,8 @@ public class CountriesServiceTests : IClassFixture<DbContextFixture>
         var context = new PersonsDbContext(options);
         context.Database.EnsureCreated();
 
-        _service = new CountriesService(null);
+        CountriesRepository repository = new CountriesRepository(context);
+        _service = new CountriesService(repository);
     }
 
     #region AddCountryTests
@@ -45,7 +47,7 @@ public class CountriesServiceTests : IClassFixture<DbContextFixture>
     {
         CountryRequest request = new CountryRequest() { Name = "USA" };
         CountryRequest request2 = new CountryRequest() { Name = "USA" };
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<DbUpdateException>(async () =>
         {
             await _service.AddCountryAsync(request);
             await _service.AddCountryAsync(request2);
