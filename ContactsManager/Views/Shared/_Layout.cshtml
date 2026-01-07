@@ -11,17 +11,51 @@
 </head>
 <body>
     <div class="container">
-        <div class="navbar">
-            <div class="navbar-brand"><h1>Contacts Manager<sub><small>v1.0</small></sub></h1></div>
-            <ul>
-                <li><a asp-action="Index" asp-controller="Home">Home</a></li>
-                <li><a asp-action="ImportExcelFile" asp-controller="Countries">Upload Countries</a></li>
-            </ul>
-        </div>
         <div class="page-content">
-            @RenderBody()
+
+            <div class="margin-bottom">
+                <div class="flex" id="top-bar-div">
+                    <div class="flex-1" id="app-title-div">
+                        <h1 class="app-title">
+                            <i class="fa-solid fa-people-simple"></i>
+                            Contact Manager
+                        </h1>
+                    </div>
+
+
+                    <div class="flex-1 pr" id="search-box-div">
+                        <div class="navbar account-links">
+
+                            <ul>
+                                <li>
+                                    <a asp-controller="Account" asp-action="Register">Register</a>
+                                    <a asp-controller="Account" asp-action="Login">Login</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="navbar mb">
+
+                <ul>
+                    <li>
+                        <a asp-controller="Home" asp-action="Index">Persons</a>
+                        <a asp-controller="Countries" asp-action="ImportExcelFile">Upload Countries</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="body">
+                @RenderBody()
+            </div>
         </div>
     </div>
-    <script></script>
+
+    @RenderSection("scripts", required: false)
 </body>
 </html>

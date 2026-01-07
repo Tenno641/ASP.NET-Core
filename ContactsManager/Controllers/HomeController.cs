@@ -11,7 +11,7 @@ using ServicesContracts.Persons;
 
 namespace ContactsManager.Controllers;
 [Route("[Controller]")]
-[TypeFilter(typeof(CookieAuthenticationFilter))]
+//[TypeFilter(typeof(CookieAuthenticationFilter))]
 public class HomeController : Controller
 {
     private readonly IPersonsService _personsService;

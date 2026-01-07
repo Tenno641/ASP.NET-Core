@@ -2,43 +2,67 @@
 @{
     ViewBag.pageTitle = "Delete Person";
 }
-<a asp-controller="Home" asp-action="Index" class="link-hover">Go to persons list</a>
-<h1>Delete Person</h1>
-<div class="center-box">
+<div class="flex">
+    <div class="flex-1">
+        <div class="text-grey">
+            <span>Contacts</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span class="text-grey">Persons</span>
+            <i class="fa-solid fa-caret-right"></i>
+            <span class="text-grey">Delete</span>
+        </div>
+    </div>
+</div>
+
+<div class="form-container">
+
+    <a asp-controller="Home" asp-action="Index" class="link-hover">Back to Persons List</a>
+    <h2 class="text-large">Delete Person</h2>
+    <h3>Are you sure to delete this person?</h3>
+
     <form asp-controller="Home" asp-action="Delete" asp-route-id="" method="post">
+
         <input type="hidden" asp-for="Id" />
 
-        <div class="flex form-field">
+        <div class="form-field flex">
             <div class="w-25">
-                <label class="form-label" asp-for="Name">Name</label>
+                <label asp-for="Name" class="form-label pt">Person Name</label>
             </div>
             <div class="flex-1">
-                <input class="form-input" asp-for="Name" disabled />
+                <input asp-for="Name" class="form-input" disabled="disabled" />
+                <span asp-validation-for="Name" class="text-red"></span>
             </div>
         </div>
 
-        <div class="flex form-field">
+
+        <div class="form-field flex">
             <div class="w-25">
-                <label class="form-label" asp-for="Email">Email</label>
+                <label asp-for="Email" class="form-label pt">Email</label>
             </div>
             <div class="flex-1">
-                <input class="form-input" asp-for="Email" disabled />
+                <input asp-for="Email" class="form-input" disabled="disabled" />
                 <span asp-validation-for="Email" class="text-red"></span>
             </div>
         </div>
 
-        <div class="flex form-field">
-            <div class="w-25">
-                <label asp-for="Age" class="form-label"></label>
-            </div>
-            <div class="flex-1">
-                <input class="form-input" asp-for="Age" asp-for="Age" disabled />
-            </div>
-        </div>
 
-        <div class="flex form-field">
+        <div class="form-field flex">
             <div class="flex-1">
-                <button class="button button-green-back" type="submit" id="ReceiveNewsLetters">Delete Person</button>
+                <button class="button button-red-back">Delete</button>
+
+                <div asp-validation-summary="All" class="text-red"></div>
+
+                @if (ViewBag.Errors != null)
+                {
+                    <div class="text-red ml">
+                        <ul>
+                            @foreach (string error in ViewBag.Errors)
+                            {
+                                <li class="ml">@error</li>
+                            }
+                        </ul>
+                    </div>
+                }
             </div>
         </div>
 
