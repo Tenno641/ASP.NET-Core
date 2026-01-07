@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ContactsManager.Filters.ActionFilters;
+using ContactsManager.Filters.AuthorizationFilters;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rotativaio.AspNetCore;
 using ServicesContracts.Countries;
@@ -9,19 +11,25 @@ using ServicesContracts.Persons;
 
 namespace ContactsManager.Controllers;
 [Route("[Controller]")]
+[TypeFilter(typeof(CookieAuthenticationFilter))]
 public class HomeController : Controller
 {
     private readonly IPersonsService _personsService;
     private readonly ICountriesService _countriesService;
-    public HomeController(IPersonsService personsService, ICountriesService countriesService)
+    private readonly ILogger<HomeController> _logger;
+    public HomeController(IPersonsService personsService, ICountriesService countriesService, ILogger<HomeController> logger)
     {
         _personsService = personsService;
         _countriesService = countriesService;
+        _logger = logger;
     }
 
     [Route("[action]")]
+    [TypeFilter(typeof(CustomActionFilters))]
+    [SkipAuthorizationFilter]
     public async Task<IActionResult> Index(string searchBy, string searchString, string sortBy = nameof(PersonResponse.Name), SortOrderOptions sortOrder = SortOrderOptions.Ascending)
     {
+        _logger.LogInformation("Okay It's the home controller");
         ViewBag.SearchOptions = new Dictionary<string, string>() {
             { "Name", "Person Name"}, {"Email", "Email"}, {"DateOfBirth","Date Of Birth" }, {"Age", "Age"},{"Gender","Gender"}, {"CountryName", "Country"},{"Address","Address"}, {"ReceiveNewsLetters", "Receive News Letters" }
         };
@@ -37,6 +45,15 @@ public class HomeController : Controller
         IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(filteredPersons, sortBy, sortOrder);
 
         return View(sortedPersons);
+    }
+
+    [Route("get-cookie")]
+    [HttpGet]
+    [SkipAuthorizationFilter]
+    public IActionResult Authenticate()
+    {
+        HttpContext.Response.Cookies.Append("Auth-Key", "Pass");
+        return Ok("Yum");
     }
 
     [Route("/")]

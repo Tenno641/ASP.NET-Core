@@ -1,11 +1,8 @@
 ﻿using AutoFixture;
 using ContactsManager.Controllers;
-using Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using Services.Countries;
-using Services.Persons;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Response;
