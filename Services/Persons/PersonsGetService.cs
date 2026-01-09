@@ -1,41 +1,21 @@
 ﻿using CsvHelper;
 using Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using RepositoryContracts;
-using Services.Helpers;
 using ServicesContracts.DTO.Persons;
-using ServicesContracts.DTO.Persons.Request;
 using ServicesContracts.DTO.Persons.Response;
 using ServicesContracts.Persons;
-using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.Globalization;
 
 namespace Services.Persons;
-public class PersonsService : IPersonsService
+public class PersonsGetService : IPersonsGetService
 {
     private readonly IPersonsRepository _repository;
-    public PersonsService(IPersonsRepository repository)
+    public PersonsGetService(IPersonsRepository repository)
     {
         _repository = repository;
-    }
-    public async Task<PersonResponse> AddPersonAsync(PersonRequest? personRequest)
-    {
-        ArgumentNullException.ThrowIfNull(personRequest);
-        (bool isValid, IReadOnlyCollection<ValidationResult> validationResults) objectValidation = ValidationHelper.ValidateObject(personRequest);
-
-        if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.validationResults.Select(result => result.ErrorMessage)));
-
-        Person person = personRequest.ToPerson();
-        person.Id = Guid.NewGuid();
-
-        await _repository.AddPersonAsync(person);
-        //InsertPersonStoredProcedure(person);
-
-        return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
     }
     public async Task<PersonResponse?> GetAsync(Guid? id)
     {
@@ -101,33 +81,6 @@ public class PersonsService : IPersonsService
             _ => await GetAllAsync()
         };
     }
-    public async Task<PersonResponse> UpdateAsync(PersonUpdateRequest? personUpdateRequest)
-    {
-        ArgumentNullException.ThrowIfNull(personUpdateRequest);
-
-        var objectValidation = ValidationHelper.ValidateObject(personUpdateRequest);
-
-        if (!objectValidation.isValid) throw new ArgumentException(string.Join(",", objectValidation.errors.Select(error => error.ErrorMessage)));
-
-        Person? person = await _repository.GetAsync(personUpdateRequest.Id);
-
-        if (person is null) throw new ArgumentException("Not Found Person");
-
-        await _repository.UpdateAsync(personUpdateRequest.ToPerson());
-
-        return PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
-    }
-
-    public async Task<bool> DeleteAsync(Guid? id)
-    {
-        ArgumentNullException.ThrowIfNull(id);
-
-        Person? person = await _repository.GetAsync(id.Value);
-        if (person is null) return false;
-
-        return await _repository.RemoveAsync(id.Value);
-    }
-
 
     public async Task<MemoryStream> GetPersonsCsvAsync()
     {
@@ -177,12 +130,5 @@ public class PersonsService : IPersonsService
         await excelPackage.SaveAsync();
         memoryStream.Position = 0;
         return memoryStream;
-    }
-
-    public async Task<IEnumerable<PersonResponse>> AddRangeAsync(IEnumerable<PersonRequest> persons)
-    {
-        IEnumerable<Person> requests = persons.Select(person => person.ToPerson());
-        IEnumerable<Person> responses = await _repository.AddRangeAsync(requests);
-        return responses.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
     }
 }

@@ -2,11 +2,12 @@
 using ContactsManager.Controllers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Services.Persons;
 using ServicesContracts.Countries;
 using ServicesContracts.DTO.Persons;
 using ServicesContracts.DTO.Persons.Response;
-using ServicesContracts.Persons;
 using Xunit.Abstractions;
 
 namespace ContactsManager.Tests;
@@ -15,17 +16,27 @@ public class HomeControllerTests
 {
     private readonly ITestOutputHelper _testOutput;
     private readonly Fixture _fixture;
+    private readonly Mock<PersonsAddService> _personsAddServiceMock; 
+    private readonly Mock<PersonsDeleteService> _personsDeleteServiceMock; 
+    private readonly Mock<PersonsGetService> _personsGetServiceMock; 
+    private readonly Mock<PersonsUpdateService> _personsUpdateServiceMock; 
     private readonly HomeController _homeController;
-    private readonly Mock<IPersonsService> _personsServiceMock;
+    private readonly Mock<ILogger<HomeController>> _loggerMock;
     public HomeControllerTests(ITestOutputHelper testOutput)
     {
         _testOutput = testOutput;
         _fixture = new Fixture();
 
-        _personsServiceMock = new Mock<IPersonsService>();
         Mock<ICountriesService> countriesServiceMock = new Mock<ICountriesService>();
 
-        _homeController = new HomeController(_personsServiceMock.Object, countriesServiceMock.Object);
+        _loggerMock = new Mock<ILogger<HomeController>>();
+
+        _personsAddServiceMock = new Mock<PersonsAddService>();
+        _personsDeleteServiceMock = new Mock<PersonsDeleteService>();
+        _personsGetServiceMock = new Mock<PersonsGetService>();
+        _personsUpdateServiceMock = new Mock<PersonsUpdateService>();
+
+        _homeController = new HomeController(countriesServiceMock.Object, _loggerMock.Object, _personsAddServiceMock.Object, _personsUpdateServiceMock.Object, _personsDeleteServiceMock.Object, _personsGetServiceMock.Object);
     }
 
     [Fact]
@@ -36,14 +47,14 @@ public class HomeControllerTests
             .Build<PersonResponse>()
             .CreateMany();
 
-        _personsServiceMock
+       _personsGetServiceMock 
             .Setup(service => service.FilterAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync(persons);
 
-        _personsServiceMock
+        _personsGetServiceMock
             .Setup(service => service.OrderAsync(It.IsAny<IEnumerable<PersonResponse>>(), It.IsAny<string>(), It.IsAny<SortOrderOptions>()))
             .ReturnsAsync(persons);
-        
+
         // Act
         IActionResult actionResult = await _homeController.Index(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SortOrderOptions>());
 

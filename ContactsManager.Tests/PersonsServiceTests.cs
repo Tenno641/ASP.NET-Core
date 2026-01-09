@@ -4,16 +4,18 @@ using Entities;
 using FluentAssertions;
 using Moq;
 using RepositoryContracts;
-using Services.Persons;
 using ServicesContracts.DTO.Persons.Response;
 using System.Linq.Expressions;
 using Xunit.Abstractions;
+using ServicesContracts.Persons;
+using Services.Persons;
 
 namespace ContactsManager.Tests;
 
 public class PersonsServiceTests
 {
-    private readonly PersonsService _personsService;
+    private readonly IPersonsAddService _personsAddService;
+    private readonly IPersonsGetService _personsGetService;
     private readonly Fixture _fixture;
     private readonly Mock<IPersonsRepository> _personsRepositoryMock;
     private readonly ITestOutputHelper _testOutput;
@@ -24,7 +26,8 @@ public class PersonsServiceTests
 
         _personsRepositoryMock = new Mock<IPersonsRepository>();
 
-        _personsService = new PersonsService(_personsRepositoryMock.Object);
+        _personsAddService = new PersonsAddService(_personsRepositoryMock.Object);
+        _personsGetService = new PersonsGetService(_personsRepositoryMock.Object);
     }
 
     #region Add Person
@@ -34,7 +37,7 @@ public class PersonsServiceTests
         PersonRequest? person = null;
 
         // Act
-        Func<Task> action = () => _personsService.AddPersonAsync(person!);
+        Func<Task> action = () => _personsAddService.AddPersonAsync(person!);
 
         // Assert
         await action.Should().ThrowAsync<ArgumentNullException>();
@@ -47,7 +50,7 @@ public class PersonsServiceTests
         PersonRequest personRequest = new();
 
         // Act
-        Func<Task> action = () => _personsService.AddPersonAsync(personRequest);
+        Func<Task> action = () => _personsAddService.AddPersonAsync(personRequest);
 
         // Assert
         await action.Should().ThrowAsync<ArgumentException>();
@@ -69,7 +72,7 @@ public class PersonsServiceTests
             .ReturnsAsync(person);
 
         // Act
-        PersonResponse response = await _personsService.AddPersonAsync(personRequest);
+        PersonResponse response = await _personsAddService.AddPersonAsync(personRequest);
         expected.Id = response.Id;
 
         // Assert
@@ -83,7 +86,7 @@ public class PersonsServiceTests
     public async Task Get_ReturnsNull_IfIdIsNull()
     {
         Guid? id = null;
-        PersonResponse? response = await _personsService.GetAsync(id);
+        PersonResponse? response = await _personsGetService.GetAsync(id);
         Assert.Null(response);
     }
 
@@ -98,7 +101,7 @@ public class PersonsServiceTests
             .ReturnsAsync(person);
 
         // Act
-        PersonResponse? actualResponse = await _personsService.GetAsync(person.Id);
+        PersonResponse? actualResponse = await _personsGetService.GetAsync(person.Id);
         PersonResponse expected = PersonResponseExtension.ToPersonResponse.Compile().Invoke(person);
 
         // Assert
@@ -116,7 +119,7 @@ public class PersonsServiceTests
             .ReturnsAsync([]);
 
         // Assert
-        (await _personsService.GetAllAsync()).Should().BeEmpty();
+        (await _personsGetService.GetAllAsync()).Should().BeEmpty();
     }
 
     [Fact]
@@ -130,7 +133,7 @@ public class PersonsServiceTests
             .ReturnsAsync(persons);
 
         // Act
-        IEnumerable<PersonResponse> actualPersonResponses = await _personsService.GetAllAsync();
+        IEnumerable<PersonResponse> actualPersonResponses = await _personsGetService.GetAllAsync();
         IEnumerable<PersonResponse> expectedPersonResponses = persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
 
         // Assert
@@ -156,7 +159,7 @@ public class PersonsServiceTests
             .ReturnsAsync(persons.Where(person => person.Name == null || person.Name.Contains('m')));
 
         // Act
-        IEnumerable<PersonResponse> actualResponses = await _personsService.FilterAsync("Name", "m");
+        IEnumerable<PersonResponse> actualResponses = await _personsGetService.FilterAsync("Name", "m");
 
         IEnumerable<PersonResponse> expectedResponses = persons.Where(person => person.Name == null || person.Name.Contains('m')).Select(PersonResponseExtension.ToPersonResponse.Compile());
 
@@ -186,7 +189,7 @@ public class PersonsServiceTests
         // Act
         IEnumerable<PersonResponse> expectedPersons = persons.OrderBy(person => person.Name).Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person));
 
-        IEnumerable<PersonResponse> actualPersons = await _personsService.OrderAsync(persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)), nameof(PersonResponse.Name), SortOrderOptions.Ascending);
+        IEnumerable<PersonResponse> actualPersons = await _personsGetService.OrderAsync(persons.Select(person => PersonResponseExtension.ToPersonResponse.Compile().Invoke(person)), nameof(PersonResponse.Name), SortOrderOptions.Ascending);
 
         _testOutput.WriteLine("actual:");
         _testOutput.WriteLine(string.Join("\n", actualPersons));

@@ -1,5 +1,6 @@
 ﻿using ContactsManager.Filters.ActionFilters;
 using ContactsManager.Filters.AuthorizationFilters;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Rotativaio.AspNetCore;
@@ -14,14 +15,27 @@ namespace ContactsManager.Controllers;
 //[TypeFilter(typeof(CookieAuthenticationFilter))]
 public class HomeController : Controller
 {
-    private readonly IPersonsService _personsService;
+    private readonly IPersonsDeleteService _personsDeleteService;
+    private readonly IPersonsAddService _personsAddService;
+    private readonly IPersonsUpdateService _personsUpdateService;
+    private readonly IPersonsGetService _personsGetService;
     private readonly ICountriesService _countriesService;
     private readonly ILogger<HomeController> _logger;
-    public HomeController(IPersonsService personsService, ICountriesService countriesService, ILogger<HomeController> logger)
+    public HomeController(
+        ICountriesService countriesService,
+        ILogger<HomeController> logger,
+        IPersonsAddService personsAddService,
+        IPersonsUpdateService personsUpdateService,
+        IPersonsDeleteService personsDeleteService,
+        IPersonsGetService personsGetService
+        )
     {
-        _personsService = personsService;
         _countriesService = countriesService;
         _logger = logger;
+        _personsAddService = personsAddService;
+        _personsUpdateService = personsUpdateService;
+        _personsDeleteService = personsDeleteService;
+        _personsGetService = personsGetService;
     }
 
     [Route("[action]")]
@@ -37,12 +51,12 @@ public class HomeController : Controller
         ViewBag.CurrentSearchBy = searchBy;
         ViewBag.CurrentSearchString = searchString;
 
-        IEnumerable<PersonResponse> filteredPersons = await _personsService.FilterAsync(searchBy, searchString);
+        IEnumerable<PersonResponse> filteredPersons = await _personsGetService.FilterAsync(searchBy, searchString);
 
         ViewBag.CurrentSortBy = sortBy;
         ViewBag.CurrentSortOrder = sortOrder;
 
-        IEnumerable<PersonResponse> sortedPersons = await _personsService.OrderAsync(filteredPersons, sortBy, sortOrder);
+        IEnumerable<PersonResponse> sortedPersons = await _personsGetService.OrderAsync(filteredPersons, sortBy, sortOrder);
 
         return View(sortedPersons);
     }
@@ -80,7 +94,7 @@ public class HomeController : Controller
             ViewBag.Errors = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
             return View();
         }
-        await _personsService.AddPersonAsync(personRequest);
+        await _personsAddService.AddPersonAsync(personRequest);
         return RedirectToAction("Index", "Home");
     }
 
@@ -88,7 +102,7 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> Update(Guid id)
     {
-        PersonResponse? person = await _personsService.GetAsync(id);
+        PersonResponse? person = await _personsGetService.GetAsync(id);
         if (person is null)
         {
             return RedirectToAction(actionName: "Index", controllerName: "Home");
@@ -104,7 +118,7 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> Update(PersonUpdateRequest personUpdateRequest)
     {
-        PersonResponse? person = await _personsService.GetAsync(personUpdateRequest.Id);
+        PersonResponse? person = await _personsGetService.GetAsync(personUpdateRequest.Id);
         if (person is null)
         {
             return RedirectToAction(actionName: "Index", controllerName: "Home");
@@ -119,7 +133,7 @@ public class HomeController : Controller
             return View(person.Value.ToPersonUpdateRequest());
         }
 
-        await _personsService.UpdateAsync(personUpdateRequest);
+        await _personsUpdateService.UpdateAsync(personUpdateRequest);
         return RedirectToAction(actionName: "Index", controllerName: "Home");
     }
 
@@ -127,7 +141,7 @@ public class HomeController : Controller
     [HttpGet]
     public async Task<IActionResult> Delete(Guid id)
     {
-        PersonResponse? person = await _personsService.GetAsync(id);
+        PersonResponse? person = await _personsGetService.GetAsync(id);
         if (person is null)
         {
             return RedirectToAction(actionName: "Index");
@@ -139,13 +153,13 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> Delete(PersonUpdateRequest personUpdateRequest)
     {
-        await _personsService.DeleteAsync(personUpdateRequest.Id);
+        await _personsDeleteService.DeleteAsync(personUpdateRequest.Id);
         return RedirectToAction(actionName: "Index");
     }
     [Route("PersonsPdf")]
     public async Task<IActionResult> PersonsPdf()
     {
-        IEnumerable<PersonResponse> persons = await _personsService.GetAllAsync();
+        IEnumerable<PersonResponse> persons = await _personsGetService.GetAllAsync();
         return new ViewAsPdf(persons)
         {
             PageOrientation = Orientation.Landscape
@@ -155,17 +169,27 @@ public class HomeController : Controller
     [Route("PersonsCsv")]
     public async Task<IActionResult> PersonsCsv()
     {
-        MemoryStream memoryStream = await _personsService.GetPersonsCsvAsync();
+        MemoryStream memoryStream = await _personsGetService.GetPersonsCsvAsync();
         return File(memoryStream, "text/csv");
     }
     [Route("PersonsExcel")]
     public async Task<IActionResult> PersonsExcel()
     {
-        MemoryStream stream = await _personsService.GetPersonsExcelAsync();
+        MemoryStream stream = await _personsGetService.GetPersonsExcelAsync();
         return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Persons.xlsx");
     }
     private async Task<IEnumerable<SelectListItem>> GetCountriesListItemsAsync()
     {
         return (await _countriesService.GetAllAsync()).Select(country => new SelectListItem() { Text = country.Name, Value = country.Id.ToString() });
+    }
+
+    [Route("/Error")]
+    public IActionResult Error()
+    {
+        IExceptionHandlerFeature? exceptionFeature = HttpContext.Features.Get<IExceptionHandlerFeature>();
+        if (exceptionFeature is null) return View();
+        ViewBag.ErrorMessage = exceptionFeature.Error.Message;
+        ViewBag.ErrorType = exceptionFeature.Error.GetType();
+        return View();
     }
 }

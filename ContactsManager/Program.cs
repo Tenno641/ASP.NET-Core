@@ -1,14 +1,6 @@
-using Services.Countries;
-using Services.Persons;
-using ServicesContracts.Countries;
-using ServicesContracts.Persons;
-using Entities.DataAccess;
-using Microsoft.EntityFrameworkCore;
-using Rotativaio.AspNetCore;
-using RepositoryContracts;
-using Repository;
 using Serilog;
-using ContactsManager.Filters.ActionFilters;
+using ContactsManager.Startup;
+using ContactsManager.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,36 +11,19 @@ builder.Host.UseSerilog((HostBuilderContext hostBuilder, IServiceProvider servic
     configureLogger.ReadFrom.Services(services);
 });
 
-builder.Services.AddControllersWithViews(options =>
-{
-    ILogger<CustomActionFilters> logger = builder.Services.BuildServiceProvider().GetRequiredService<ILogger<CustomActionFilters>>();
-
-    options.Filters.Add(new CustomActionFilters(logger));
-});
-
-builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
-builder.Services.AddScoped<IPersonsRepository, PersonsRepository>();
-
-builder.Services.AddScoped<ICountriesService, CountriesService>();
-builder.Services.AddScoped<IPersonsService, PersonsService>();
-
-builder.Services.AddDbContext<PersonsDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
-});
-
-builder.Services.AddHttpLogging(options =>
-{
-    options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.None;
-});
-
-if (!builder.Environment.IsEnvironment("IntegrationTesting"))
-{
-    builder.Services.AddRotativaIo("https://api.rotativa.io", builder.Configuration["rotativaApiKey"] ?? throw new InvalidOperationException("RotativaApiKey is missing"));
-}
+builder.Services.ConfigureServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    //app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandlingMiddleware();
+}
 app.UseSerilogRequestLogging();
 app.UseHttpLogging();
 app.UseStaticFiles();
