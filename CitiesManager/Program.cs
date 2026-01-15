@@ -1,15 +1,14 @@
 using Asp.Versioning;
 using CitiesManager.Data;
+using CitiesManager.Models.IdentityEntities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddXmlSerializerFormatters();
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("MSSqlServer"));
-});
 builder.Services.AddOpenApi("v1");
 builder.Services.AddOpenApi("v2");
 builder.Services.AddApiVersioning(options =>
@@ -20,6 +19,27 @@ builder.Services.AddApiVersioning(options =>
     options.GroupNameFormat = "'v'V";
     options.SubstituteApiVersionInUrl = true;
 });
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(configure =>
+    {
+        configure.AllowAnyHeader()
+        .AllowAnyOrigin()
+        .AllowAnyMethod();
+    });
+});
+
+builder.Services.AddIdentity<User, Role>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders()
+    .AddUserStore<UserStore<User, Role, ApplicationDbContext, Guid>>()
+    .AddRoleStore<RoleStore<Role, ApplicationDbContext, Guid>>();
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("MSSqlServer"));
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -38,6 +58,7 @@ else
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

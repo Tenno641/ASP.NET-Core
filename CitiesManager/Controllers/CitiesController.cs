@@ -2,11 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using CitiesManager.Data;
 using CitiesManager.Models;
+using Asp.Versioning;
 
 namespace CitiesManager.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    [ApiVersion("2.0")]
     public class CitiesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

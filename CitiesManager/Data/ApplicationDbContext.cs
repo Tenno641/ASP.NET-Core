@@ -1,9 +1,11 @@
 ﻿using CitiesManager.Models;
+using CitiesManager.Models.IdentityEntities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CitiesManager.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<User, Role, Guid> 
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
     public DbSet<City> Cities { get; set; }
@@ -18,7 +20,15 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<City>()
             .HasIndex(city => city.Name);
 
-        SeedCityData(modelBuilder);
+        modelBuilder.Entity<User>()
+            .Property(user => user.Id)
+            .ValueGeneratedNever();
+
+        modelBuilder.Entity<Role>()
+            .Property(role => role.Id)
+            .ValueGeneratedNever();
+
+        //SeedCityData(modelBuilder);
     }
 
     private void SeedCityData(ModelBuilder modelBuilder)
