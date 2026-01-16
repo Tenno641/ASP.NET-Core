@@ -4,11 +4,13 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-	</PropertyGroup>
+	  <UserSecretsId>13194978-fca9-49c3-aa3b-be731fe91fb6</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Mvc" Version="8.1.1" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.1" />

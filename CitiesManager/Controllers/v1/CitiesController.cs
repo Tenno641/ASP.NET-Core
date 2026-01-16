@@ -3,12 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using CitiesManager.Data;
 using CitiesManager.Models;
 using Asp.Versioning;
-using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace CitiesManager.Controllers.v1;
 
 [ApiVersion("1.0")]
-[EnableCors()]
 public class CitiesController : CustomControllerBase
 {
     private readonly ApplicationDbContext _context;
