@@ -3,6 +3,7 @@ using CitiesManager.Models.IdentityEntities;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CitiesManager.Services;
@@ -38,7 +39,7 @@ public class JwtService
             claims: claims,
             expires: expiration,
             signingCredentials: signingCredentials);
-        
+
         JwtSecurityTokenHandler tokenHandler = new JwtSecurityTokenHandler();
         string token = tokenHandler.WriteToken(securityToken);
 
@@ -48,8 +49,17 @@ public class JwtService
             Email = user.Email,
             Expiration = expiration,
             Name = user.Name,
-            Token = token
+            Token = token,
+            RefreshToken = GenerateRefreshToken(),
+            RefreshTokenExpiration = DateTime.UtcNow.AddMinutes(Convert.ToInt32(_configuration["RefreshToken:ExpirationTimeInMinutes"]))
         };
         return userResponse;
+    }
+    private string GenerateRefreshToken()
+    {
+        Byte[] bytes = new byte[64];
+        RandomNumberGenerator numberGenerator = RandomNumberGenerator.Create();
+        numberGenerator.GetBytes(bytes);
+        return Convert.ToBase64String(bytes);
     }
 }

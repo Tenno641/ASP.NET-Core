@@ -35,6 +35,10 @@ public class AccountController : CustomControllerBase
         if (!identityResult.Succeeded) return Problem(string.Join(" | ", identityResult.Errors.Select(error => error.Description)));
 
         UserResponse userResponse = _jwtService.GenerateToken(user);
+        user.RefreshToken = userResponse.RefreshToken;
+        user.RefreshTokenExpiration = userResponse.RefreshTokenExpiration;
+        await _userManager.UpdateAsync(user);
+
         return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userResponse);
     }
 
@@ -43,7 +47,9 @@ public class AccountController : CustomControllerBase
     {
         User? user = await _userManager.FindByIdAsync(id.ToString());
         if (user is null) return NotFound();
-        return Ok(new { user.Id, user.Name, user.Email });
+
+        UserResponse userResponse = _jwtService.GenerateToken(user);
+        return Ok(userResponse);
     }
 
     [HttpPost("login")]
@@ -57,6 +63,10 @@ public class AccountController : CustomControllerBase
         if (user is null) return NotFound();
 
         UserResponse userResponse = _jwtService.GenerateToken(user);
+        user.RefreshToken = userResponse.RefreshToken;
+        user.RefreshTokenExpiration = userResponse.RefreshTokenExpiration;
+        await _userManager.UpdateAsync(user);
+
         return Ok(userResponse);
     }
 }

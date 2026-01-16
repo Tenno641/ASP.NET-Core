@@ -9,4 +9,6 @@ public class User : IdentityUser<Guid>
         Id = Guid.CreateVersion7();
     }
     public required string Name { get; init; }
+    public string RefreshToken { get; set; }
+    public DateTime RefreshTokenExpiration { get; set; }
 }
