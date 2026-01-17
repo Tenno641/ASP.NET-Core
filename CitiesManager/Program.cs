@@ -31,11 +31,18 @@ builder.Services.AddOpenApi(options =>
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
-        document.Components.SecuritySchemes.Add("bearer", new OpenApiSecurityScheme()
+        document.Components.SecuritySchemes.Add("Bearer Token", new OpenApiSecurityScheme()
         {
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
             Scheme = "bearer"
+        });
+
+        document.Components.SecuritySchemes.Add("Cookie Authentication", new OpenApiSecurityScheme()
+        {
+            In = ParameterLocation.Cookie,
+            Type = SecuritySchemeType.ApiKey,
+            Name = ".AspNetCore.Identity.Application"
         });
 
         return Task.CompletedTask;

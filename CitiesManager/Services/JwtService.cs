@@ -23,10 +23,11 @@ public class JwtService
         [
             new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new (JwtRegisteredClaimNames.Jti, Guid.CreateVersion7().ToString()),
-            new(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
-            new (ClaimTypes.NameIdentifier, user.Email),
+            new (JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString()),
+            new (ClaimTypes.NameIdentifier, user.Id.ToString()),
             new (ClaimTypes.Email, user.Email),
-            new (ClaimTypes.Name, user.Name),
+            new (ClaimTypes.GivenName, user.Name),
+            new (ClaimTypes.Name, user.Email),
         ];
 
         SymmetricSecurityKey securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("Please Provide Security Key")));
@@ -62,4 +63,30 @@ public class JwtService
         numberGenerator.GetBytes(bytes);
         return Convert.ToBase64String(bytes);
     }
+
+    public ClaimsPrincipal ValidateToken(string token)
+    {
+        TokenValidationParameters validationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuer = true,
+            ValidIssuer = _configuration["Jwt:Issuer"],
+            ValidateAudience = true,
+            ValidAudience = _configuration["Jwt:Audience"],
+            ValidateLifetime = false,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new InvalidOperationException("Please provide JWT key")))
+        };
+
+        JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+        ClaimsPrincipal principal = jwtSecurityTokenHandler.ValidateToken(token, validationParameters, out SecurityToken securityToken);
+
+        JwtSecurityToken? jwtSecurityToken = securityToken as JwtSecurityToken;
+        if (jwtSecurityToken is null || jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        {
+            throw new SecurityTokenException();
+        }
+
+        return principal;
+    }
+
 }

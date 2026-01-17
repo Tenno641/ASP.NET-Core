@@ -4,6 +4,7 @@ using CitiesManager.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CitiesManager.Controllers.v1;
 
@@ -68,5 +69,27 @@ public class AccountController : CustomControllerBase
         await _userManager.UpdateAsync(user);
 
         return Ok(userResponse);
+    }
+
+    [HttpPost("refresh-token")]
+    public async Task<ActionResult<UserResponse>> RefreshToken(AuthenticationToken authToken)
+    {
+        ClaimsPrincipal principal = _jwtService.ValidateToken(authToken.Token);
+        
+        User? user = await _userManager.FindByIdAsync(principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? "");
+        if (user is null) return NotFound("Can't find user");
+
+        if (user.RefreshToken.Equals(authToken.RefreshToken) || user.RefreshTokenExpiration < DateTime.UtcNow)
+        {
+            return Unauthorized();
+        }
+
+        UserResponse userResponse = _jwtService.GenerateToken(user);
+
+        user.RefreshToken = userResponse.RefreshToken;
+        user.RefreshTokenExpiration = userResponse.RefreshTokenExpiration;
+        await _userManager.UpdateAsync(user);
+
+        return userResponse;
     }
 }
