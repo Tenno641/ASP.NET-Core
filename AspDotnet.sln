@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StocksApp", "StocksApp\Stoc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CitiesManager", "CitiesManager\CitiesManager.csproj", "{B47C2210-3C8D-46ED-9FA1-AC7AFFC87EE7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalApi", "MinimalApi\MinimalApi.csproj", "{1151C255-1DAB-4865-939A-293177DA74FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +197,18 @@ Global
 		{B47C2210-3C8D-46ED-9FA1-AC7AFFC87EE7}.Release|x64.Build.0 = Release|Any CPU
 		{B47C2210-3C8D-46ED-9FA1-AC7AFFC87EE7}.Release|x86.ActiveCfg = Release|Any CPU
 		{B47C2210-3C8D-46ED-9FA1-AC7AFFC87EE7}.Release|x86.Build.0 = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|x64.Build.0 = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Debug|x86.Build.0 = Debug|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|x64.ActiveCfg = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|x64.Build.0 = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|x86.ActiveCfg = Release|Any CPU
+		{1151C255-1DAB-4865-939A-293177DA74FC}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
