@@ -1,8 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MinimalApi.Data;
-using MinimalApi.DTO.Products;
-using MinimalApi.Models;
+using MinimalApi.Products;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,40 +22,27 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/{value:alpha?}", async (HttpContext context, [FromQuery] string? value) =>
-{
-    await context.Response.WriteAsync(value ?? "Empty Value!");
-});
+app.MapGroup("/products").MapProductEndpoints();
 
-app.MapPost("products", async (HttpContext context, AddProductRequest productRequest, ApplicationDbContext dbContext) =>
+app.MapPost("/is-palindrome{input:alpha}", (string input) =>
 {
-    Product product = new Product()
+    int length = input.Length;
+    for (int i = 0; i < length / 2; i++)
     {
-        Name = productRequest.Name
-    };
-    dbContext.Products.Add(product);
-    await dbContext.SaveChangesAsync();
-    await context.Response.WriteAsJsonAsync(product);
-});
-
-app.MapGet("products{id:guid}", async (HttpContext context, Guid id, ApplicationDbContext dbContext) =>
-{
-    Product? product = await dbContext.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
-
-    if (product is null)
-    {
-        await context.Response.WriteAsync("Product Not Found");
-        return;
+        bool shallMatch = input[i].Equals(input[length - i - 1]);
+        if (!shallMatch) return Results.Ok(false);
     }
 
-    await context.Response.WriteAsJsonAsync(product);
-});
+    return Results.Ok(true);
 
-app.MapGet("products", async (HttpContext context, ApplicationDbContext dbContext) =>
-{
-    IEnumerable<Product> products = await dbContext.Products.AsNoTracking().ToListAsync();
-
-    await context.Response.WriteAsJsonAsync(products);
+    /*StringBuilder reversed = new();
+    for (int i = input.Length - 1; i >= 0; i--)
+    {
+        reversed.Append(input[i]);
+    }
+    bool isPalindrome = input.Equals(reversed.ToString(), StringComparison.InvariantCultureIgnoreCase);
+    return Results.Ok(isPalindrome);
+    */
 });
 
 app.Run();
